@@ -2,13 +2,11 @@ import { useState, useEffect } from 'react';
 import { Container, Row, Col, ListGroup, Button, Spinner } from 'react-bootstrap';
 import axios from 'axios';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import TenziesGame from '../../components/Tenzies/TenziesGame';
+import Header from '../../components/Header';
 
-import TenziesGame from './components/Tenzies/TenziesGame';
 
-import Header from './components/Header';
-import './App.css';
-
-function ProfilePage() {
+function HomePage() {
   const [showDetails, setShowDetails] = useState(false);
   const [showJavaSkills, setShowJavaSkills] = useState(false);
   const [showSqlSkills, setShowSqlSkills] = useState(false);
@@ -103,16 +101,5 @@ function ProfilePage() {
   );
 }
 
-function App() {
-  return (
-    <Router>
-      <Header />
-      <Routes>
-        <Route path="/" element={<ProfilePage />} />
-        <Route path="/tenzies" element={<TenziesGame />} />
-      </Routes>
-    </Router>
-  );
-}
 
-export default App;
+export default HomePage;
