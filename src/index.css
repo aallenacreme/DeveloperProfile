@@ -1,17 +1,6 @@
-body {
-  background: linear-gradient(to bottom, #d3d3d3, #000000);
-  background-repeat: no-repeat;     /* prevent background from repeating */
-  background-attachment: fixed;    /* keep background fixed during scroll */
-  background-size: cover;           /* make the gradient cover the viewport */
-  min-height: 500vh;
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  padding-bottom: 350px;
-}
-
-
-/* Reset default styles */
 html, body, #root {
   height: 100%;
   width: 100%;
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 }

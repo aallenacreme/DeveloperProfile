@@ -1,13 +1,68 @@
 .tenzies-container {
   position: fixed;
-  bottom: 20px;          /* 20px from the bottom */
-  left: 50%;             /* position left edge at 50% of viewport */
-  transform: translateX(-50%); /* shift container left by 50% of its width to center it */
-  width: 500px;
-  height: 500px;
-  background-color: rgb(207, 37, 37);
-  box-shadow: 0 0 10px rgba(0,0,0,0.15);
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 800px;
+  height: 800px;
+  background-color: rgb(48, 162, 255);
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.15);
   border-radius: 8px;
   overflow: auto;
   z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+main {
+  
+  text-align: center;
+  padding: 20px;
+}
+
+.dice-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 60px);
+  grid-gap: 20px;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+.die {
+  width: 60px;
+  height: 60px;
+  background-color: white;
+  border: 2px solid #333;
+  border-radius: 8px;
+  font-size: 24px;
+  font-weight: bold;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.die.held {
+  background-color: #59e391;
+}
+
+.die.mismatched {
+  background-color: #ff4d4d; /* Red for mismatched dice */
+}
+
+.roll-button {
+  margin-top: 20px;
+  padding: 10px 20px;
+  font-size: 18px;
+  background-color: #5035ff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.roll-button:hover {
+  background-color: #3f2ad1;
 }
