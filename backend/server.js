@@ -5,7 +5,7 @@ const app = express();
 app.use(cors());
 
 const profileData = {
-  name: 'Allen',
+  name: 'John',
   collegeProgress: [
     'Completed 60 credits toward my Computer Science degree',
     'Aced courses like Data Structures, Algorithms, and Web Development',
@@ -29,7 +29,7 @@ const profileData = {
   footerText: 'Footer',
   githubUrl: 'https://github.com/aallenacreme',
   projectTitle: 'Motion-Controlled Kiosk System',
-  projectSubtitle: 'Class Project – Computer Science Course, University of New Orleans',
+  projectSubtitle: 'Class Project – Computer Science Course, University ',
   projectDuration: 'August 2024 – Present',
   projectDescription: 'Developing a user-friendly interface for a Raspberry Pi-based kiosk system enabling motionless hand interactions through LeetMotion technology.',
   projectDetails: [
@@ -38,8 +38,7 @@ const profileData = {
     'Collaborating in a team of 25 to design, test, and deploy the system across campus TVs.',
     'Emphasis on robust performance and ease of use in public-facing deployments.'
   ]
-};
-
+}
 // API route to get profile data
 app.get('/api/profile', (req, res) => {
   res.json(profileData);

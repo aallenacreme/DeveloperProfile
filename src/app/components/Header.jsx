@@ -14,7 +14,12 @@ function Header() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    axios.get('http://localhost:5000/api/profile')
+    const token = localStorage.getItem('token'); // Get JWT token from login
+    axios.get('https://localhost:7129/api/profile', { // Corrected to lowercase 'profile'
+      headers: {
+        Authorization: `Bearer ${token}` // Add token to headers
+      }
+    })
       .then(response => {
         setHeaderData({
           name: response.data.name,
@@ -40,13 +45,10 @@ function Header() {
 
   return (
     <>
-      {/* Blue Header Section */}
       <div className="p-5 bg-primary text-white text-center">
         <h1>{headerData.headerTitle || 'My First Bootstrap 5 Page'}</h1>
         <p>{headerData.headerSubtitle || 'Software Developer'}</p>
       </div>
-
-      {/* Navbar */}
       <Navbar bg="dark" variant="dark" expand="lg" style={{ borderBottom: '2px solid #fff' }}>
         <Container className="d-flex justify-content-between align-items-center">
           <Navbar.Brand>{headerData.name || 'Allen'}</Navbar.Brand>

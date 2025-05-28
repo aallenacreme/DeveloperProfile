@@ -21,7 +21,12 @@ function HomePage() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    axios.get('http://localhost:5000/api/profile')
+    const token = localStorage.getItem('token'); // Get the JWT token
+    axios.get('https://localhost:7129/api/profile', {
+      headers: {
+        Authorization: `Bearer ${token}` // Add token to headers
+      }
+    })
       .then(response => {
         setProfileData(response.data);
         setIsLoading(false);
@@ -53,7 +58,6 @@ function HomePage() {
     <>
       <Header />
       <MainContent profileData={profileData} />
-      {/* Footer */}
       <div className="mt-5 p-4 bg-dark text-white text-center">
         <p>{profileData.footerText || 'Footer'}</p>
       </div>
