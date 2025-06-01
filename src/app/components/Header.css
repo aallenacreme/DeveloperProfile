@@ -1,0 +1,146 @@
+/* Styles for the hero section (background and layout) */
+.hero-section {
+  background-color: #007bff; /* Blue background */
+  height: 100vh; /* Full viewport height */
+  min-height: 600px; /* Minimum height for smaller screens */
+  width: 100%; /* Full width */
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center; /* Center content vertically */
+  align-items: center; /* Center content horizontally */
+  text-align: center;
+  position: relative;
+  overflow: hidden; /* Hide overflow content */
+  color: white; /* White text color */
+}
+
+/* Container for the name and subtitle, centered vertically */
+.title-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Container for the name, ensures no wrapping */
+.name-container {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  white-space: pre; /* Prevent name from breaking into multiple lines */
+  font-size: 3.5rem; /* Large font size for name */
+  font-weight: bold;
+  margin-bottom: 1rem;
+}
+
+/* Styles for the first and last name parts, enabling animation */
+.first-name, .last-name {
+  display: inline-block;
+  will-change: transform; /* Optimize for transform animations */
+}
+
+/* Styles for individual letters, enabling scaling animations */
+.letter {
+  display: inline-block;
+  transform-origin: center bottom; /* Scale from bottom center */
+  will-change: transform; /* Optimize for transform animations */
+}
+
+/* Styles for the subtitle ("Software Developer") */
+.subtitle {
+  font-size: 1.5rem; /* Smaller font size for subtitle */
+  font-weight: 300; /* Lighter font weight */
+  will-change: transform; /* Optimize for transform animations */
+  margin-top: 1rem;
+}
+
+/* Styles for the rainbow ball SVG */
+.ball {
+  width: 50px;
+  height: 50px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  opacity: 0; /* Initially hidden */
+  z-index: 50; /* Ensure ball is above other elements */
+  will-change: transform; /* Optimize for transform animations */
+  
+}
+
+/* Border style for the navbar */
+.navbar-border {
+  border-bottom: 2px solid #fff; /* White border at the bottom */
+}
+.letter-particle {
+  position: absolute;
+  z-index: 10;
+}
+
+/* Container for navbar content, aligning items */
+.nav-container {
+  display: flex;
+  justify-content: space-between; /* Space between brand and buttons */
+  align-items: center; /* Vertically center items */
+}
+
+/* Container for navigation buttons, adding spacing */
+.nav-buttons {
+  display: flex;
+  gap: 10px; /* Space between buttons */
+}
+
+/* Remove default link underline */
+.nav-link {
+  text-decoration: none;
+}
+
+/* Styles for the GitHub icon */
+.github-icon {
+  width: 24px;
+  height: 24px;
+}
+/* Add these new styles to your Header.css */
+.particle {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 20;
+}
+
+/* Enhance the subtitle styling */
+.subtitle {
+  font-size: 1.5rem;
+  font-weight: 300;
+  will-change: transform, color, scale;
+  margin-top: 1rem;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+  transition: all 0.3s ease;
+}
+/* For the shattering text effect */
+.char {
+  display: inline-block;
+  position: relative;
+  will-change: transform, opacity;
+}
+
+.subtitle {
+  display: inline-block;
+  overflow: visible;
+  perspective: 1000px;
+}
+
+/* Explosion particle styles */
+.explosion-particle {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 100;
+  will-change: transform, opacity;
+}
+

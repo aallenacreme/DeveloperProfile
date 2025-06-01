@@ -24,6 +24,7 @@ const profileData = {
     'Experienced with triggers and the EVENT-CONDITION-ACTION model',
     'Proficient in using cursors and prepared statements',
   ],
+  learningAdaptation: 'My ability to adapt and learn keeps me ahead. I thrive on mastering new technologies, consistently improving my skills in SQL and Java, and exploring innovative solutions to enhance my development expertise.',
   headerTitle: 'Allen Mahdi',
   headerSubtitle: 'Software Developer',
   footerText: 'Footer',

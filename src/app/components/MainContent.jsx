@@ -1,71 +1,101 @@
-import { Container, Row, Col, ListGroup } from 'react-bootstrap';
+import { useEffect, useRef } from 'react';
+import { Container, Row, Col } from 'react-bootstrap';
+import './MainContent.css';
+import dns from '../assets/images/dns.svg';
 
-function MainContent({ profileData }) {
+function MainContent({ profileData, aboutSectionRef }) {
+  const skillsSectionRef = useRef(null);
+
+  useEffect(() => {
+    const scrollFadeInSections = [aboutSectionRef.current, skillsSectionRef.current].filter(ref => ref);
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('is-visible');
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.3 }
+    );
+
+    scrollFadeInSections.forEach(section => {
+      if (section) {
+        observer.observe(section);
+      }
+    });
+
+    return () => {
+      scrollFadeInSections.forEach(section => {
+        if (section) {
+          observer.unobserve(section);
+        }
+      });
+    };
+  }, [aboutSectionRef]);
+
   return (
-    <Container className="mt-5">
-      <Row>
-        {/* Sidebar (Profile Data) */}
-        <Col sm={4}>
-          <h2>About Me</h2>
-          <h5>Photo of me:</h5>
-          <div className="fakeimg">Fake Image</div>
-          <p>I'm {profileData.name || 'a student'}, a passionate computer science student and aspiring developer.</p>
-
-          <h3 className="mt-4">My Progress in College</h3>
-          <ListGroup>
-            {profileData.collegeProgress.length > 0 ? (
-              profileData.collegeProgress.map((item, index) => (
-                <ListGroup.Item key={index}>{item}</ListGroup.Item>
-              ))
-            ) : (
-              <ListGroup.Item>No progress data available</ListGroup.Item>
-            )}
-          </ListGroup>
-
-          <h3 className="mt-4">Java Skills</h3>
-          <ListGroup>
-            {profileData.javaSkills.length > 0 ? (
-              profileData.javaSkills.map((skill, index) => (
-                <ListGroup.Item key={index}>{skill}</ListGroup.Item>
-              ))
-            ) : (
-              <ListGroup.Item>No Java skills available</ListGroup.Item>
-            )}
-          </ListGroup>
-
-          <h3 className="mt-4">SQL Skills</h3>
-          <ListGroup>
-            {profileData.sqlSkills.length > 0 ? (
-              profileData.sqlSkills.map((skill, index) => (
-                <ListGroup.Item key={index}>{skill}</ListGroup.Item>
-              ))
-            ) : (
-              <ListGroup.Item>No SQL skills available</ListGroup.Item>
-            )}
-          </ListGroup>
-
-          <hr className="d-sm-none" />
+    <Container fluid>
+      <Row className=" full-page-row about-section" ref={aboutSectionRef}>
+        <Col xs={12} md={6} className="about-content-col">
+          <h2 className="about-heading">About Me</h2>
+          <p className="about-content">
+                   <img src={dns} alt="random dns photo" className="dns" />
+            I'm {profileData.name}, a passionate computer science student and aspiring developer.
+          </p>
         </Col>
+        <Col xs={12} md={6} className="timeline-col">
+          <h3 className="timeline-heading">My College Progress</h3>
+          <div className="timeline">
+            {profileData.collegeProgress.map((item, index) => (
+              <div key={index} className="timeline-item">
+                <div className="timeline-content">
+                  <p>{item}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Col>
+      </Row>
 
-        {/* Main Content */}
-        <Col sm={8}>
-          <h2>{profileData.projectTitle || 'Motion-Controlled Kiosk System'}</h2>
-          <h5>{profileData.projectSubtitle || 'Class Project – Computer Science Course, University of New Orleans'}</h5>
-          <p><strong>Duration:</strong> {profileData.projectDuration || 'August 2024 – Present'}</p>
-          <p>{profileData.projectDescription || 'Developing a user-friendly interface for a Raspberry Pi-based kiosk system enabling motionless hand interactions through LeetMotion technology.'}</p>
+      <Row className=" full-page-row skills-section" ref={skillsSectionRef}>
+        <Col xs={12}>
+          <h2 className="skills-heading">My Skills</h2>
+          <Row className="skills-row">
+            <Col xs={12} md={4} className="skill-col">
+              <h4>SQL Mastery</h4>
+              <p className="skill-content">
+                {profileData.sqlSkills.join(' ')}
+              </p>
+            </Col>
+            <Col xs={12} md={4} className="skill-col">
+              <h4>Java Expertise</h4>
+              <p className="skill-content">
+                {profileData.javaSkills.join(' ')}
+              </p>
+            </Col>
+            <Col xs={12} md={4} className="skill-col">
+              <h4>Adaptive Learning</h4>
+              <p className="skill-content">
+                {profileData.learningAdaptation}
+              </p>
+            </Col>
+          </Row>
+        </Col>
+      </Row>
+
+      <Row className="mb-5 full-page-row">
+        <Col xs={12}>
+          <h2>{profileData.projectTitle}</h2>
+          <h5>{profileData.projectSubtitle}</h5>
+          <p><strong>Duration:</strong> {profileData.projectDuration}</p>
+          <p>{profileData.projectDescription}</p>
           <ul>
-            {profileData.projectDetails && profileData.projectDetails.length > 0 ? (
-              profileData.projectDetails.map((detail, index) => (
-                <li key={index}>{detail}</li>
-              ))
-            ) : (
-              <>
-                <li>Utilizing Python and LeetMotion for advanced gesture recognition capabilities.</li>
-                <li>Focused on enhancing accessibility and user interaction in school environments.</li>
-                <li>Collaborating in a team of 25 to design, test, and deploy the system across campus TVs.</li>
-                <li>Emphasis on robust performance and ease of use in public-facing deployments.</li>
-              </>
-            )}
+            {profileData.projectDetails.map((detail, index) => (
+              <li key={index}>{detail}</li>
+            ))}
           </ul>
         </Col>
       </Row>

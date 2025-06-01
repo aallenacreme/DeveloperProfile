@@ -1,73 +1,113 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { Navbar, Container, Button } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
-import axios from 'axios';
+import RainbowBall from './Rainbowball';
+import animateBallBounce from './animateBounceBall';
 import './Header.css';
 
-function Header() {
-  const [headerData, setHeaderData] = useState({
-    name: '',
-    headerTitle: '',
-    headerSubtitle: ''
-  });
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+function Header({ profileData, aboutSectionRef }) {
+  const ballRef = useRef(null);
+  const titleLetterRefs = useRef([]);
+  const firstNameRef = useRef(null);
+  const lastNameRef = useRef(null);
+  const subtitleRef = useRef(null);
+
+  const headerTitle = profileData.headerTitle || 'AllenMahdi';
+  const headerSubtitle = profileData.headerSubtitle || 'Software Developer';
 
   useEffect(() => {
-    axios.get('http://localhost:5000/api/profile')
-      .then(response => {
-        setHeaderData({
-          name: response.data.name,
-          headerTitle: response.data.headerTitle,
-          headerSubtitle: response.data.headerSubtitle
-        });
-        setIsLoading(false);
-      })
-      .catch(error => {
-        console.error('API error:', error);
-        setError('Failed to load header data');
-        setIsLoading(false);
-      });
-  }, []);
+    setTimeout(() => {
+      animateBallBounce(
+        ballRef,
+        titleLetterRefs,
+        firstNameRef,
+        lastNameRef,
+        subtitleRef,
+        aboutSectionRef
+      );
+    }, 500);
+  }, [aboutSectionRef]);
 
-  if (isLoading) {
-    return <div>Loading header...</div>;
-  }
+  const splitName = (name) => {
+    if (!name) return ['Allen', 'Mahdi'];
+    const trimmedName = name.trim();
+    const splitIndex = trimmedName
+      .split('')
+      .findIndex((char, i) => i > 0 && char === char.toUpperCase());
+    return splitIndex === -1
+      ? [trimmedName, '']
+      : [trimmedName.substring(0, splitIndex), trimmedName.substring(splitIndex)];
+  };
 
-  if (error) {
-    return <div className="text-danger">{error}</div>;
-  }
+  const [firstName, lastName] = splitName(headerTitle);
+
+  titleLetterRefs.current = [];
 
   return (
     <>
-      {/* Blue Header Section */}
-      <div className="p-5 bg-primary text-white text-center">
-        <h1>{headerData.headerTitle || 'My First Bootstrap 5 Page'}</h1>
-        <p>{headerData.headerSubtitle || 'Software Developer'}</p>
+      <div className="hero-section">
+        <div className="title-container">
+          <h1 className="name-container">
+            <span className="first-name" ref={firstNameRef}>
+              {firstName
+                .split('')
+                .filter((c) => c.trim())
+                .map((letter, i) => (
+                  <span
+                    key={`first-${i}`}
+                    className="letter"
+                    ref={(el) => {
+                      if (el) titleLetterRefs.current.push(el);
+                    }}
+                  >
+                    {letter}
+                  </span>
+                ))}
+            </span>
+            <span className="last-name" ref={lastNameRef}>
+              {lastName
+                .split('')
+                .filter((c) => c.trim())
+                .map((letter, i) => (
+                  <span
+                    key={`last-${i}`}
+                    className="letter"
+                    ref={(el) => {
+                      if (el) titleLetterRefs.current.push(el);
+                    }}
+                  >
+                    {letter}
+                  </span>
+                ))}
+            </span>
+          </h1>
+          <p className="subtitle" ref={subtitleRef}>
+            {headerSubtitle}
+          </p>
+          <RainbowBall ref={ballRef} />
+        </div>
       </div>
-
-      {/* Navbar */}
-      <Navbar bg="dark" variant="dark" expand="lg" style={{ borderBottom: '2px solid #fff' }}>
-        <Container className="d-flex justify-content-between align-items-center">
-          <Navbar.Brand>{headerData.name || 'Allen'}</Navbar.Brand>
-          <div>
-            <Link to="/" style={{ textDecoration: 'none', marginRight: '10px' }}>
+      <Navbar bg="dark" variant="dark" expand="lg" className="navbar-border">
+        <Container className="nav-container">
+          <Navbar.Brand>{profileData.name || 'Allen'}</Navbar.Brand>
+          <div className="nav-buttons">
+            <Link to="/" className="nav-link">
               <Button variant="outline-light">Home</Button>
             </Link>
-            <Link to="/tenzies" style={{ textDecoration: 'none', marginRight: '10px' }}>
-              <Button variant="outline-light">Play Tenzies</Button>
+            <Link to="/tenzies" className="nav-link">
+              <Button variant="outline-light">Output</Button>
             </Link>
             <a
-              href="https://github.com/aallenacreme"
+              href="https://github.com"
               target="_blank"
               rel="noopener noreferrer"
-              style={{ textDecoration: 'none' }}
+              className="nav-link"
             >
               <Button variant="outline-light">
                 <img
                   src="/assets/images/git.svg"
                   alt="GitHub"
-                  style={{ width: '24px', height: '24px' }}
+                  className="github-icon"
                 />
               </Button>
             </a>

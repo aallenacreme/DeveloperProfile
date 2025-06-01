@@ -1,12 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Container, Spinner } from 'react-bootstrap';
 import axios from 'axios';
 import Header from '../../components/Header';
 import MainContent from '../../components/MainContent';
+import Footer from '../../components/Footer';
 
 function HomePage() {
   const [profileData, setProfileData] = useState({
     name: '',
+    headerTitle: 'AllenMahdi',
+    headerSubtitle: 'Software Developer',
     collegeProgress: [],
     javaSkills: [],
     sqlSkills: [],
@@ -15,18 +18,21 @@ function HomePage() {
     projectSubtitle: '',
     projectDuration: '',
     projectDescription: '',
-    projectDetails: []
+    projectDetails: [],
   });
+
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const aboutSectionRef = useRef(null);
 
   useEffect(() => {
-    axios.get('http://localhost:5000/api/profile')
-      .then(response => {
+    axios
+      .get('http://localhost:5000/api/profile')
+      .then((response) => {
         setProfileData(response.data);
         setIsLoading(false);
       })
-      .catch(error => {
+      .catch((error) => {
         console.error('API error:', error);
         setError('Failed to load profile data');
         setIsLoading(false);
@@ -42,21 +48,14 @@ function HomePage() {
   }
 
   if (error) {
-    return (
-      <Container className="mt-5">
-        <p className="text-danger">{error}</p>
-      </Container>
-    );
+    return <Container className="text-danger">{error}</Container>;
   }
 
   return (
     <>
-      <Header />
-      <MainContent profileData={profileData} />
-      {/* Footer */}
-      <div className="mt-5 p-4 bg-dark text-white text-center">
-        <p>{profileData.footerText || 'Footer'}</p>
-      </div>
+      <Header profileData={profileData} aboutSectionRef={aboutSectionRef} />
+      <MainContent profileData={profileData} aboutSectionRef={aboutSectionRef} />
+      <Footer />
     </>
   );
 }
