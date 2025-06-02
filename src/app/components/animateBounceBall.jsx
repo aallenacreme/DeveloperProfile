@@ -211,37 +211,9 @@ function createExplosionParticles(x, y, container) {
   }
 }
 
-// Helper function for letter particles (optional)
-function createLetterParticles(x, y, container) {
-  const colors = ['#ff0000', '#00ff00', '#0000ff'];
-  for (let i = 0; i < 5; i++) {
-    const particle = document.createElement('div');
-    particle.className = 'letter-particle';
-    particle.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-    particle.style.width = '5px';
-    particle.style.height = '5px';
-    particle.style.borderRadius = '50%';
-    particle.style.position = 'absolute';
-    container.appendChild(particle);
+
     
-    gsap.fromTo(particle, 
-      {
-        x: x,
-        y: y,
-        opacity: 1,
-        scale: 0.5
-      },
-      {
-        x: x + (Math.random() - 0.5) * 30,
-        y: y + (Math.random() - 0.5) * 30,
-        scale: Math.random() * 0.5 + 0.3,
-        opacity: 0,
-        duration: 0.3,
-        ease: 'power2.out',
-        onComplete: () => container.removeChild(particle)
-      }
-    );
-  }
-}
+  
+
 
 export default animateBallBounce;
