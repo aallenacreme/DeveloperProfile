@@ -1,19 +1,73 @@
-import { useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Navbar, Container, Button } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
+import { authFetch, useAuth } from '../auth';
 import RainbowBall from './Rainbowball';
 import animateBallBounce from './animateBounceBall';
+import LoginModal from './LoginModal';
+import StarField from './Starfield';
 import './Header.css';
 
-function Header({ profileData, aboutSectionRef }) {
+function Header({ aboutSectionRef }) {
+  const [scrolled, setScrolled] = useState(false);
+  const [scrollingUp, setScrollingUp] = useState(false);
+  const [activeLink, setActiveLink] = useState('home');
+  const [lastScrollY, setLastScrollY] = useState(0);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const { isLoggedIn, setIsLoggedIn } = useAuth();
+  const [profileData, setProfileData] = useState({
+    name: 'AllenMahdi',
+    headerTitle: 'AllenMahdi',
+    headerSubtitle: 'Software Developer',
+  });
+
   const ballRef = useRef(null);
   const titleLetterRefs = useRef([]);
   const firstNameRef = useRef(null);
   const lastNameRef = useRef(null);
   const subtitleRef = useRef(null);
 
-  const headerTitle = profileData.headerTitle || 'AllenMahdi';
-  const headerSubtitle = profileData.headerSubtitle || 'Software Developer';
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const response = await authFetch('http://localhost:5000/api/profile');
+        if (response.ok) {
+          const data = await response.json();
+          setProfileData({
+            name: data.name || 'AllenMahdi',
+            headerTitle: data.headerTitle || 'AllenMahdi',
+            headerSubtitle: data.headerSubtitle || 'Software Developer',
+          });
+        } else {
+          console.error('Failed to fetch profile:', await response.text());
+        }
+      } catch (err) {
+        console.error('Error fetching profile:', err);
+      }
+    };
+    fetchProfile();
+  }, [isLoggedIn]);
+
+  const handleLogout = () => {
+    localStorage.removeItem('token'); // Clear token
+    setIsLoggedIn(false); // Update auth state
+    setProfileData({
+      name: 'AllenMahdi',
+      headerTitle: 'AllenMahdi',
+      headerSubtitle: 'Software Developer',
+    }); // Reset profile data
+  };
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      setScrolled(currentScrollY > 20);
+      setScrollingUp(currentScrollY < lastScrollY && currentScrollY > 20);
+      setLastScrollY(currentScrollY);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [lastScrollY]);
 
   useEffect(() => {
     setTimeout(() => {
@@ -28,6 +82,10 @@ function Header({ profileData, aboutSectionRef }) {
     }, 500);
   }, [aboutSectionRef]);
 
+  const handleSetActive = (link) => {
+    setActiveLink(link);
+  };
+
   const splitName = (name) => {
     if (!name) return ['Allen', 'Mahdi'];
     const trimmedName = name.trim();
@@ -39,81 +97,120 @@ function Header({ profileData, aboutSectionRef }) {
       : [trimmedName.substring(0, splitIndex), trimmedName.substring(splitIndex)];
   };
 
-  const [firstName, lastName] = splitName(headerTitle);
+  const [firstName, lastName] = splitName(profileData.headerTitle);
 
   titleLetterRefs.current = [];
 
   return (
     <>
       <div className="hero-section">
+        <StarField />
         <div className="title-container">
           <h1 className="name-container">
             <span className="first-name" ref={firstNameRef}>
-              {firstName
-                .split('')
-                .filter((c) => c.trim())
-                .map((letter, i) => (
-                  <span
-                    key={`first-${i}`}
-                    className="letter"
-                    ref={(el) => {
-                      if (el) titleLetterRefs.current.push(el);
-                    }}
-                  >
-                    {letter}
-                  </span>
-                ))}
+              {firstName.split('').map((letter, i) => (
+                <span
+                  key={`first-${i}`}
+                  className="letter"
+                  ref={(el) => el && titleLetterRefs.current.push(el)}
+                >
+                  {letter}
+                </span>
+              ))}
             </span>
             <span className="last-name" ref={lastNameRef}>
-              {lastName
-                .split('')
-                .filter((c) => c.trim())
-                .map((letter, i) => (
-                  <span
-                    key={`last-${i}`}
-                    className="letter"
-                    ref={(el) => {
-                      if (el) titleLetterRefs.current.push(el);
-                    }}
-                  >
-                    {letter}
-                  </span>
-                ))}
+              {lastName.split('').map((letter, i) => (
+                <span
+                  key={`last-${i}`}
+                  className="letter"
+                  ref={(el) => el && titleLetterRefs.current.push(el)}
+                >
+                  {letter}
+                </span>
+              ))}
             </span>
           </h1>
           <p className="subtitle" ref={subtitleRef}>
-            {headerSubtitle}
+            {profileData.headerSubtitle}
           </p>
           <RainbowBall ref={ballRef} />
         </div>
       </div>
-      <Navbar bg="dark" variant="dark" expand="lg" className="navbar-border">
+
+      <Navbar
+        fixed="top"
+        expand="lg"
+        className={`navbar-glass ${scrolled ? 'scrolled' : ''} ${scrollingUp ? 'scrolling-up' : ''}`}
+      >
         <Container className="nav-container">
-          <Navbar.Brand>{profileData.name || 'Allen'}</Navbar.Brand>
-          <div className="nav-buttons">
-            <Link to="/" className="nav-link">
-              <Button variant="outline-light">Home</Button>
-            </Link>
-            <Link to="/tenzies" className="nav-link">
-              <Button variant="outline-light">Output</Button>
-            </Link>
-            <a
-              href="https://github.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="nav-link"
-            >
-              <Button variant="outline-light">
-                <img
-                  src="/assets/images/git.svg"
-                  alt="GitHub"
-                  className="github-icon"
-                />
+          <Navbar.Brand className="gradient-brand">
+            {profileData.name || 'AllenMahdi'}
+          </Navbar.Brand>
+          <Navbar.Toggle aria-controls="basic-navbar-nav" className="custom-toggler" />
+          <Navbar.Collapse id="basic-navbar-nav" className="justify-content-end">
+            <div className="nav-buttons">
+              <Link
+                to="/"
+                className={`nav-link ${activeLink === 'home' ? 'active' : ''}`}
+                onClick={() => handleSetActive('home')}
+              >
+                <Button variant="outline-light" className={`nav-button ${activeLink === 'home' ? 'active' : ''}`}>
+                  Home
+                </Button>
+              </Link>
+              <Link
+                to="/tenzies"
+                className={`nav-link ${activeLink === 'output' ? 'active' : ''}`}
+                onClick={() => handleSetActive('output')}
+              >
+                <Button variant="outline-light" className={`nav-button ${activeLink === 'output' ? 'active' : ''}`}>
+                  Output
+                </Button>
+              </Link>
+              <a
+                href="https://github.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="nav-link"
+              >
+                <Button variant="outline-light" className="nav-button">
+                  <span className="github-text">GitHub</span>
+                  <span className="github-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                      <path
+                        fillRule="evenodd"
+                        clipRule="evenodd"
+                        d="M12 2C6.477 2...10z"
+                        fill="currentColor"
+                      />
+                    </svg>
+                  </span>
+                </Button>
+              </a>
+              {isLoggedIn && (
+                <Link
+                  to="/edit-profile"
+                  className={`nav-link ${activeLink === 'edit-profile' ? 'active' : ''}`}
+                  onClick={() => handleSetActive('edit-profile')}
+                >
+                  <Button variant="outline-light" className={`nav-button ${activeLink === 'edit-profile' ? 'active' : ''}`}>
+                    Edit Profile
+                  </Button>
+                </Link>
+              )}
+              <Button
+                variant="outline-light"
+                className="nav-button"
+                onClick={isLoggedIn ? handleLogout : () => setShowLoginModal(true)}
+              >
+                {isLoggedIn ? 'Logout' : 'Login'}
               </Button>
-            </a>
-          </div>
+            </div>
+          </Navbar.Collapse>
         </Container>
       </Navbar>
+
+      <LoginModal show={showLoginModal} onHide={() => setShowLoginModal(false)} />
     </>
   );
 }

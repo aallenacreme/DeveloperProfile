@@ -1,68 +1,136 @@
-.tenzies-container {
+/* TENZIES-SCOPED STYLES (no global leaks) */
+
+/* Add this at the top of TenziesGame.css */
+.tenzies-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at center, #0f0c29 0%, #302b63 70%);
+  z-index: 999; /* Below the game (z-index: 1000) */
+}
+
+
+.tenzies-game-container {
   position: fixed;
   bottom: 20px;
   left: 50%;
   transform: translateX(-50%);
-  width: 800px;
-  height: 800px;
-  background-color: rgb(48, 162, 255);
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.15);
-  border-radius: 8px;
+  width: 600px;
+  height: 600px;
+  background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+  box-shadow: 0 0 20px rgba(138, 43, 226, 0.5), 
+              0 0 40px rgba(75, 0, 130, 0.3);
+  border-radius: 16px;
   overflow: auto;
   z-index: 1000;
   display: flex;
   justify-content: center;
   align-items: center;
+  border: 1px solid #6a5acd;
+  transition: background 0.5s ease;
 }
 
-main {
-  
+.tenzies-game-container.won {
+  background: linear-gradient(135deg, #1a2a6c 0%, #b21f1f 50%, #fdbb2d 100%);
+}
+
+.tenzies-game-container.game-over {
+  background: linear-gradient(135deg, #2c3e50 0%, #4a0a0a 100%);
+}
+
+.tenzies-game-main {
   text-align: center;
   padding: 20px;
+  width: 100%;
 }
 
-.dice-grid {
+.tenzies-game-title {
+  color: #e0e0ff;
+  text-shadow: 0 0 10px #9370db, 
+               0 0 20px #8a2be2;
+  font-size: 3rem;
+  margin-bottom: 20px;
+}
+
+.tenzies-game-instructions {
+  color: #b8b8ff;
+  font-size: 1.2rem;
+  margin-bottom: 30px;
+}
+
+.tenzies-dice-grid {
   display: grid;
-  grid-template-columns: repeat(5, 60px);
-  grid-gap: 20px;
+  grid-template-columns: repeat(5, 70px);
+  grid-gap: 25px;
   justify-content: center;
-  margin: 20px 0;
+  margin: 30px 0;
 }
 
 .die {
-  width: 60px;
-  height: 60px;
-  background-color: white;
-  border: 2px solid #333;
-  border-radius: 8px;
-  font-size: 24px;
+  width: 70px;
+  height: 70px;
+  background: radial-gradient(circle, #e0e0ff 0%, #b8b8ff 100%);
+  border: 2px solid #9370db;
+  border-radius: 12px;
+  font-size: 28px;
   font-weight: bold;
   display: flex;
   justify-content: center;
   align-items: center;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 10px rgba(138, 43, 226, 0.3);
+  color: #0f0c29;
+}
+
+.die:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 15px rgba(138, 43, 226, 0.6);
 }
 
 .die.held {
-  background-color: #59e391;
+  background: radial-gradient(circle, #59e391 0%, #2ecc71 100%);
+  border-color: #27ae60;
+  box-shadow: 0 0 15px rgba(46, 204, 113, 0.6);
 }
 
 .die.mismatched {
-  background-color: #ff4d4d; /* Red for mismatched dice */
+  background: radial-gradient(circle, #ff4d4d 0%, #e74c3c 100%);
+  border-color: #c0392b;
+  box-shadow: 0 0 15px rgba(231, 76, 60, 0.6);
+  animation: tenzies-pulse 0.5s ease-in-out;
 }
 
-.roll-button {
-  margin-top: 20px;
-  padding: 10px 20px;
-  font-size: 18px;
-  background-color: #5035ff;
+@keyframes tenzies-pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+.tenzies-roll-button {
+  margin-top: 30px;
+  padding: 12px 30px;
+  font-size: 1.2rem;
+  background: linear-gradient(to right, #6a3093 0%, #a044ff 100%);
   color: white;
   border: none;
-  border-radius: 5px;
+  border-radius: 8px;
   cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 15px rgba(106, 48, 147, 0.5);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: bold;
 }
 
-.roll-button:hover {
-  background-color: #3f2ad1;
+.tenzies-roll-button:hover {
+  background: linear-gradient(to right, #a044ff 0%, #6a3093 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 0 20px rgba(160, 68, 255, 0.7);
+}
+
+.tenzies-roll-button:active {
+  transform: translateY(0);
 }

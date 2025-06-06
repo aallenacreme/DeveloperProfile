@@ -1,20 +1,22 @@
-import { useState, useEffect } from 'react';
-import { Container, Row, Col, ListGroup, Button, Spinner } from 'react-bootstrap';
-import axios from 'axios';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { AuthProvider } from './auth';
 import TenziesGame from './components/Tenzies/TenziesGame';
-import "./assets/custom/app.css";
 import HomePage from './pages/cms/HomePage';
-
+import EditProfile from './components/EditProfile';
+import './assets/custom/app.css';
+import './auth';
 
 function App() {
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/tenzies" element={<TenziesGame />} />
-      </Routes>
-    </Router>
+    <AuthProvider>
+      <Router>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/edit-profile" element={<EditProfile />} />
+          <Route path="/tenzies" element={<TenziesGame />} />
+        </Routes>
+      </Router>
+    </AuthProvider>
   );
 }
 

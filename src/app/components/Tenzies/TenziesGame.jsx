@@ -14,7 +14,6 @@ function TenziesGame() {
   const gameWon = dice.every(die => die.isHeld) && 
                   dice.every(die => die.value === dice[0].value);
 
-  // Focus button when game is won
   useEffect(() => {
     if (gameWon) {
       buttonRef.current.focus();
@@ -22,14 +21,12 @@ function TenziesGame() {
     }
   }, [gameWon]);
 
-  // Check for game-over condition
   useEffect(() => {
     if (rollCount >= 10 && !gameWon) {
       setGameOver(true);
     }
   }, [rollCount, gameWon]);
 
-  // Check for mismatches when dice are held
   useEffect(() => {
     const heldDice = dice.filter(die => die.isHeld);
     const hasMismatch = heldDice.length > 1 && 
@@ -77,39 +74,36 @@ function TenziesGame() {
   ));
 
   return (
-    <div
-     className="tenzies-container"
-  style={{ 
-    backgroundColor: gameWon ? 'green' : rollCount >= 7 ? 'red' : '',
-    transition: 'background-color 0.5s ease'
-  }}
-    >
-      <main>
-        {gameWon && <Confetti />}
-        <div aria-live="polite" className="sr-only">
-          {gameWon && <p>Congratulations! You won! Press "Play Again" to start again.</p>}
-          {gameOver && !gameWon && <p>Game Over! You ran out of rolls. Press "Play Again" to try again.</p>}
-        </div>
-        <h1>Tenzies</h1>
-        <p>
-          {gameWon
-            ? 'Congratulations! You won! Click below to play again.'
-            : gameOver
-            ? 'Game Over! You ran out of rolls. Click below to try again.'
-            : `Roll until all dice are the same. Rolls remaining: ${10 - rollCount}`}
-        </p>
-        <div className="dice-grid">
-          {diceElements}
-        </div>
-        <button
-          ref={buttonRef}
-          className="roll-button"
-          onClick={rollDice}
-        >
-          {gameWon || gameOver ? 'Play Again' : 'Roll Dice'}
-        </button>
-      </main>
-    </div>
+    <>
+      <div className="tenzies-backdrop"></div>
+      <div className={`tenzies-game-container ${gameWon ? 'won' : gameOver ? 'game-over' : ''}`}>
+        <main className="tenzies-game-main">
+          {gameWon && <Confetti />}
+          <div aria-live="polite" className="sr-only">
+            {gameWon && <p>Congratulations! You won! Press "Play Again" to start again.</p>}
+            {gameOver && !gameWon && <p>Game Over! You ran out of rolls. Press "Play Again" to try again.</p>}
+          </div>
+          <h1 className="tenzies-game-title">Tenzies</h1>
+          <p className="tenzies-game-instructions">
+            {gameWon
+              ? 'Congratulations! You won! Click below to play again.'
+              : gameOver
+              ? 'Game Over! You ran out of rolls. Click below to try again.'
+              : `Roll until all dice are the same. Rolls remaining: ${10 - rollCount}`}
+          </p>
+          <div className="tenzies-dice-grid">
+            {diceElements}
+          </div>
+          <button
+            ref={buttonRef}
+            className="tenzies-roll-button"
+            onClick={rollDice}
+          >
+            {gameWon || gameOver ? 'Play Again' : 'Roll Dice'}
+          </button>
+        </main>
+      </div>
+    </>
   );
 }
 

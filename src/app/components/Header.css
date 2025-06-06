@@ -1,6 +1,16 @@
-/* Styles for the hero section (background and layout) */
+/* Star field canvas */
+.star-field {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1; /* Behind title and RainbowBall */
+  pointer-events: none; /* Prevent interaction with canvas */
+}
+
 .hero-section {
-  background-color: #007bff; /* Blue background */
+  background: linear-gradient(135deg, #0e0566, #302b63, #9999ff); /* Dark gradient background */
   height: 100vh; /* Full viewport height */
   min-height: 600px; /* Minimum height for smaller screens */
   width: 100%; /* Full width */
@@ -22,6 +32,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  z-index: 2; /* Above star field */
 }
 
 /* Container for the name, ensures no wrapping */
@@ -52,8 +63,13 @@
 .subtitle {
   font-size: 1.5rem; /* Smaller font size for subtitle */
   font-weight: 300; /* Lighter font weight */
-  will-change: transform; /* Optimize for transform animations */
+  will-change: transform, color, scale; /* Optimize for animations */
   margin-top: 1rem;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+  transition: all 0.3s ease;
+  display: inline-block;
+  overflow: visible;
+  perspective: 1000px;
 }
 
 /* Styles for the rainbow ball SVG */
@@ -66,42 +82,14 @@
   opacity: 0; /* Initially hidden */
   z-index: 50; /* Ensure ball is above other elements */
   will-change: transform; /* Optimize for transform animations */
-  
 }
 
 /* Border style for the navbar */
 .navbar-border {
   border-bottom: 2px solid #fff; /* White border at the bottom */
 }
-.letter-particle {
-  position: absolute;
-  z-index: 10;
-}
 
-/* Container for navbar content, aligning items */
-.nav-container {
-  display: flex;
-  justify-content: space-between; /* Space between brand and buttons */
-  align-items: center; /* Vertically center items */
-}
-
-/* Container for navigation buttons, adding spacing */
-.nav-buttons {
-  display: flex;
-  gap: 10px; /* Space between buttons */
-}
-
-/* Remove default link underline */
-.nav-link {
-  text-decoration: none;
-}
-
-/* Styles for the GitHub icon */
-.github-icon {
-  width: 24px;
-  height: 24px;
-}
-/* Add these new styles to your Header.css */
+/* Particle styles */
 .particle {
   position: absolute;
   width: 8px;
@@ -111,26 +99,10 @@
   z-index: 20;
 }
 
-/* Enhance the subtitle styling */
-.subtitle {
-  font-size: 1.5rem;
-  font-weight: 300;
-  will-change: transform, color, scale;
-  margin-top: 1rem;
-  text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
-  transition: all 0.3s ease;
-}
-/* For the shattering text effect */
-.char {
-  display: inline-block;
-  position: relative;
-  will-change: transform, opacity;
-}
-
-.subtitle {
-  display: inline-block;
-  overflow: visible;
-  perspective: 1000px;
+/* Letter particle styles */
+.letter-particle {
+  position: absolute;
+  z-index: 10;
 }
 
 /* Explosion particle styles */
@@ -144,3 +116,173 @@
   will-change: transform, opacity;
 }
 
+/* For the shattering text effect */
+.char {
+  display: inline-block;
+  position: relative;
+  will-change: transform, opacity;
+}
+
+/* Glassmorphism navbar with gradient effects */
+.navbar-glass {
+  background: rgba(20, 15, 70, 0); /* Fully transparent when not scrolled */
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0);
+  box-shadow: none;
+  padding: 0.8rem 1rem;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  transition: all 0.4s ease;
+  opacity: 0; /* Fully transparent when not scrolled */
+}
+
+.navbar-glass.scrolled {
+  background: rgba(10, 5, 40, 0.85); /* Visible when scrolled down */
+  backdrop-filter: blur(15px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  opacity: 1; /* Fully visible when scrolled down */
+}
+
+.navbar-glass.scrolling-up {
+  background: rgba(20, 15, 70, 0.4); /* Semi-transparent when scrolling up */
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  opacity: 0.4; /* Slightly visible when scrolling up */
+}
+
+/* Gradient text for brand */
+.gradient-brand {
+  background: linear-gradient(45deg, #ff00cc, #00ccff, #00ff99);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  font-weight: 700;
+  font-size: 1.7rem;
+  letter-spacing: 0.5px;
+  margin: 0;
+  transition: all 0.3s ease;
+}
+
+/* Navbar toggle button */
+.custom-toggler {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  padding: 0.25rem 0.5rem;
+}
+
+.custom-toggler .navbar-toggler-icon {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(255, 255, 255, 0.8)' stroke-width='2' stroke-linecap='round' stroke-miterlimit='10' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+}
+
+/* Nav container */
+.nav-container {
+  max-width: 1400px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Nav buttons container */
+.nav-buttons {
+  display: flex;
+  gap: 0.8rem;
+}
+
+/* Nav button styles */
+.nav-button {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 30px;
+  padding: 0.6rem 1.4rem;
+  color: #e6f1ff;
+  transition: all 0.3s ease;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 0 15px rgba(0, 204, 255, 0.3); /* Add aura to all buttons */
+}
+
+.nav-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(45deg, #ff00cc, #00ccff, #00ff99);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: -1;
+}
+
+.nav-button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  color: white;
+  border-color: transparent;
+}
+
+.nav-button:hover::before {
+  opacity: 0.3;
+}
+
+/* Active link styles */
+.nav-button.active,
+.nav-link.active .nav-button {
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 0 15px rgba(0, 204, 255, 0.3);
+  color: white; /* Ensure active button text is white */
+}
+
+/* GitHub icon styling */
+.github-icon {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.github-text {
+  display: inline-block;
+  margin-right: 0.5rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 992px) {
+  .nav-buttons {
+    padding-top: 1rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .nav-button {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .github-text {
+    display: inline-block;
+  }
+}
+
+@media (max-width: 576px) {
+  .gradient-brand {
+    font-size: 1.4rem;
+  }
+  
+  .nav-button {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+  }
+}

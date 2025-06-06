@@ -1,0 +1,120 @@
+.project-section {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  opacity: 0;
+  transform: translateY(50px);
+  transition: opacity 1s ease, transform 1s ease;
+}
+
+.project-section.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.project-col {
+  max-width: 900px;
+  width: 100%;
+}
+
+.project-content-wrapper {
+  width: 100%;
+}
+
+.project-title {
+  font-size: 2.2rem;
+  margin-bottom: 1rem;
+  background: linear-gradient(90deg, #ff00cc, #00ccff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  display: inline-block;
+  animation: gradient-shift-primary 8s ease infinite;
+  background-size: 200% 200%;
+}
+
+.project-subtitle {
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+  font-weight: 400;
+  background: linear-gradient(90deg, #91d3ff, #0099ff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  display: inline-block;
+  animation: gradient-shift-secondary 8s ease infinite;
+  background-size: 200% 200%;
+}
+
+.project-duration {
+  font-style: italic;
+  margin-bottom: 1.5rem;
+  color: rgba(230, 241, 255, 0.8);
+}
+
+.project-description {
+  font-size: 1.1rem;
+  line-height: 1.8;
+  margin-bottom: 2rem;
+  color: #e6f1ff;
+}
+
+.project-details-list {
+  padding-left: 1.5rem;
+  color: #e6f1ff;
+}
+
+.project-detail-item {
+  margin-bottom: 0.8rem;
+  line-height: 1.6;
+  position: relative;
+  color: #e6f1ff;
+}
+
+.project-detail-item::before {
+  content: "▹";
+  position: absolute;
+  left: -1.5rem;
+  color: #00ff99;
+}
+
+@keyframes gradient-shift-primary {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes gradient-shift-secondary {
+  0% {
+    background-position: 100% 50%;
+  }
+  50% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 100% 50%;
+  }
+}
+.project-card {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  padding: 3rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+.project-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+  background: rgba(255, 255, 255, 0.15);
+}

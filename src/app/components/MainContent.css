@@ -1,4 +1,3 @@
-/* Core layout and global styles */
 .main-container {
   position: relative;
   overflow: hidden;
@@ -6,6 +5,100 @@
   min-height: 100vh;
   color: #e6f1ff;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.sticky-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.animated-blob {
+  position: absolute;
+  border-radius: 30%;
+  filter: blur(60px);
+  opacity: 0.2;
+  animation: blob-move 15s infinite ease-in-out;
+}
+
+.blob-1 {
+  width: 400px;
+  height: 400px;
+  background: #ff00cc;
+  top: 20%;
+  left: 10%;
+  animation-delay: 0s;
+}
+
+.blob-2 {
+  width: 500px;
+  height: 500px;
+  background: #00ccff;
+  top: 50%;
+  right: 15%;
+  animation-delay: -5s;
+}
+
+.blob-3 {
+  width: 300px;
+  height: 300px;
+  background: #00ff99;
+  bottom: 10%;
+  left: 40%;
+  animation-delay: -10s;
+}
+
+.particles-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.particle {
+  position: absolute;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 50%;
+  animation: particle-move 20s infinite linear;
+}
+
+@keyframes blob-move {
+  0% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  25% {
+    transform: translate(50px, 50px) rotate(90deg);
+  }
+  50% {
+    transform: translate(100px, 0) rotate(180deg);
+  }
+  75% {
+    transform: translate(50px, -50px) rotate(270deg);
+  }
+  100% {
+    transform: translate(0, 0) rotate(360deg);
+  }
+}
+
+@keyframes particle-move {
+  0% {
+    transform: translateY(0) translateX(0);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-100vh) translateX(20px);
+    opacity: 0;
+  }
 }
 
 .section-header {
@@ -22,6 +115,7 @@
   font-weight: 700;
   font-size: 3.5rem;
   margin-bottom: 1rem;
+  animation: gradient-pulse 8s infinite;
 }
 
 .header-underline {
@@ -44,18 +138,23 @@
   animation: underline-move 3s infinite;
 }
 
-/* Entry animations */
-.about-section,
-.timeline-section,
-.skills-section {
-  opacity: 0;
-  transform: translateY(50px);
-  transition: opacity 1s ease, transform 1s ease;
+@keyframes underline-move {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
 }
 
-.about-section.is-visible,
-.timeline-section.is-visible,
-.skills-section.is-visible {
-  opacity: 1;
-  transform: translateY(0);
+@keyframes gradient-pulse {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
 }

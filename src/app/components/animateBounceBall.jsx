@@ -4,7 +4,7 @@ import { SplitText } from 'gsap/SplitText';
 // Register the SplitText plugin
 gsap.registerPlugin(SplitText);
 
-function animateBallBounce(ballRef, letterRefs, firstNameRef, lastNameRef, subtitleRef, aboutSectionRef) {
+function animateBallBounce(ballRef, letterRefs, firstNameRef, lastNameRef, subtitleRef) {
   if (!ballRef.current || !letterRefs.current.length) return;
 
   // Disable scrolling
@@ -69,14 +69,6 @@ function animateBallBounce(ballRef, letterRefs, firstNameRef, lastNameRef, subti
       rotation: 0, // Finalize rotation
       duration: 0.05
     });
-    // Optional: Add particle burst
-    /*
-    .call(() => {
-      createLetterParticles(letterRect.left - containerRect.left + letterRect.width/2, 
-                           letterRect.top - containerRect.top, 
-                           container);
-    }, null, '-=0.1');
-    */
   });
 
   // Split name
@@ -161,7 +153,7 @@ function animateBallBounce(ballRef, letterRefs, firstNameRef, lastNameRef, subti
     delay: 0.1
   });
 
-  // Return names to original positions and scroll to About Me
+  // Return names to original positions and scroll to custom pixel value
   tl.to([firstName, lastName], {
     x: 0,
     duration: 0.15,
@@ -172,10 +164,8 @@ function animateBallBounce(ballRef, letterRefs, firstNameRef, lastNameRef, subti
       if (lastName.textContent && !lastName.textContent.startsWith(' ')) {
         lastName.textContent = ' ' + lastName.textContent;
       }
-      // Scroll to About Me section
-      if (aboutSectionRef?.current) {
-        aboutSectionRef.current.scrollIntoView({ behavior: 'smooth' });
-      }
+      // Scroll to custom pixel value (600px from top)
+      window.scrollTo({ top: 625, behavior: 'smooth' });
       document.body.style.overflow = 'auto';
     }
   });
@@ -210,10 +200,5 @@ function createExplosionParticles(x, y, container) {
     );
   }
 }
-
-
-    
-  
-
 
 export default animateBallBounce;
