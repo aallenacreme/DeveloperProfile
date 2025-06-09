@@ -1,6 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { Container, Row, Col } from 'react-bootstrap';
-import { authFetch, useAuth } from '../auth';
 import './MainContent.css';
 import './AboutSection.css';
 import './TimelineSection.css';
@@ -14,42 +13,11 @@ import javascript from '../assets/images/javascript.svg';
 import cpp from '../assets/images/cpp.svg';
 import react from '../assets/images/react.svg';
 
-function MainContent({ aboutSectionRef }) {
+function MainContent({ aboutSectionRef, profileData }) {
   const skillsSectionRef = useRef(null);
   const timelineSectionRef = useRef(null);
   const projectSectionRef = useRef(null);
-  const { isLoggedIn } = useAuth();
-  const [userProfile, setUserProfile] = useState({
-    name: '',
-    headerTitle: '',
-    headerSubtitle: '',
-    collegeProgress: [],
-    javaSkills: [],
-    sqlSkills: [],
-    footerText: '',
-    projectTitle: '',
-    projectSubtitle: '',
-    projectDuration: '',
-    projectDescription: '',
-    projectDetails: [],
-  });
-
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const response = await authFetch('http://localhost:5000/api/profile');
-        if (response.ok) {
-          const data = await response.json();
-          setUserProfile(data);
-        } else {
-          console.error('Failed to fetch profile:', await response.text());
-        }
-      } catch (err) {
-        console.error('Error fetching profile:', err);
-      }
-    };
-    fetchProfile();
-  }, [isLoggedIn]);
+ 
 
   useEffect(() => {
     const scrollFadeInSections = [
@@ -94,6 +62,8 @@ function MainContent({ aboutSectionRef }) {
           ))}
         </div>
       </div>
+      
+      {/* About Section */}
       <Row className="about-section" ref={aboutSectionRef}>
         <Col xs={12} className="about-content-col">
           <div className="section-header">
@@ -109,7 +79,7 @@ function MainContent({ aboutSectionRef }) {
             </div>
             <div className="about-content">
               <p>
-                Hey I'm <span className="highlight">{userProfile.name || 'Allen'}</span>, a passionate computer science student starting my 4th year. I'm getting into web development and looking to learn more about building clean, functional websites. I'm excited to grow my skills and work on projects that make a difference.
+                Hey I'm <span className="highlight">{profileData.name || 'Allen'}</span>, a passionate computer science student starting my 4th year. I'm getting into web development and looking to learn more about building clean, functional websites. I'm excited to grow my skills and work on projects that make a difference.
               </p>
               <div className="interests-container">
                 <div className="interest-tag">Web Development</div>
@@ -121,6 +91,8 @@ function MainContent({ aboutSectionRef }) {
           </div>
         </Col>
       </Row>
+
+      {/* Timeline Section */}
       <Row className="timeline-section" ref={timelineSectionRef}>
         <Col xs={12} className="timeline-col">
           <div className="section-header">
@@ -128,7 +100,7 @@ function MainContent({ aboutSectionRef }) {
             <div className="header-underline"></div>
           </div>
           <div className="timeline">
-            {userProfile.collegeProgress.map((item, index) => (
+            {profileData.collegeProgress.map((item, index) => (
               <div key={index} className="timeline-item">
                 <div className="timeline-number">{index + 1}</div>
                 <div className="timeline-content">
@@ -142,6 +114,8 @@ function MainContent({ aboutSectionRef }) {
           </div>
         </Col>
       </Row>
+
+      {/* Skills Section */}
       <Row className="skills-section" ref={skillsSectionRef}>
         <Col xs={12}>
           <div className="section-header">
@@ -218,6 +192,8 @@ function MainContent({ aboutSectionRef }) {
           </Row>
         </Col>
       </Row>
+
+      {/* Project Section */}
       <Row className="project-section" ref={projectSectionRef}>
         <Col xs={12} className="project-col">
           <div className="section-header">
@@ -226,12 +202,12 @@ function MainContent({ aboutSectionRef }) {
           </div>
           <div className="project-content-wrapper">
             <div className="project-card">
-              <h3 className="project-title">{userProfile.projectTitle}</h3>
-              <h4 className="project-subtitle">{userProfile.projectSubtitle}</h4>
-              <p className="project-duration">{userProfile.projectDuration}</p>
-              <p className="project-description">{userProfile.projectDescription}</p>
+              <h3 className="project-title">{profileData.projectTitle}</h3>
+              <h4 className="project-subtitle">{profileData.projectSubtitle}</h4>
+              <p className="project-duration">{profileData.projectDuration}</p>
+              <p className="project-description">{profileData.projectDescription}</p>
               <ul className="project-details-list">
-                {userProfile.projectDetails.map((detail, index) => (
+                {profileData.projectDetails.map((detail, index) => (
                   <li key={index} className="project-detail-item">
                     {detail}
                   </li>

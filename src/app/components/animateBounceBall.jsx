@@ -1,3 +1,4 @@
+
 import { gsap } from 'gsap';
 import { SplitText } from 'gsap/SplitText';
 
@@ -6,9 +7,6 @@ gsap.registerPlugin(SplitText);
 
 function animateBallBounce(ballRef, letterRefs, firstNameRef, lastNameRef, subtitleRef) {
   if (!ballRef.current || !letterRefs.current.length) return;
-
-  // Disable scrolling
-  document.body.style.overflow = 'hidden';
 
   const ball = ballRef.current;
   const letters = letterRefs.current.filter(el => el);
@@ -153,7 +151,7 @@ function animateBallBounce(ballRef, letterRefs, firstNameRef, lastNameRef, subti
     delay: 0.1
   });
 
-  // Return names to original positions and scroll to custom pixel value
+  // Return names to original positions
   tl.to([firstName, lastName], {
     x: 0,
     duration: 0.15,
@@ -164,9 +162,7 @@ function animateBallBounce(ballRef, letterRefs, firstNameRef, lastNameRef, subti
       if (lastName.textContent && !lastName.textContent.startsWith(' ')) {
         lastName.textContent = ' ' + lastName.textContent;
       }
-      // Scroll to custom pixel value (600px from top)
-      window.scrollTo({ top: 625, behavior: 'smooth' });
-      document.body.style.overflow = 'auto';
+      // No auto-scroll or scroll locking; page remains scrollable
     }
   });
 }

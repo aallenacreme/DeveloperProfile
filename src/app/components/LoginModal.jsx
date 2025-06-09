@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Modal, Form, Button } from 'react-bootstrap';
-import { authFetch, useAuth } from '../auth';
+import { useAuth } from '../auth';
+import axiosInstance from './axiosInstance';
 
 function LoginModal({ show, onHide }) {
   const [username, setUsername] = useState('');
@@ -11,58 +12,31 @@ function LoginModal({ show, onHide }) {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const response = await authFetch('http://localhost:5000/api/login', {
-        method: 'POST',
-        body: JSON.stringify({ username, password }),
-      });
-      const data = await response.json();
-      if (response.ok) {
-        setError('');
-        localStorage.setItem('token', data.token);
-        setIsLoggedIn(true);
-        setUsername('');
-        setPassword('');
-        onHide();
-        alert('Login successful!');
-      } else {
-        setError(data.message || 'Login failed');
-      }
+      const { data } = await axiosInstance.post('/login', { username, password });
+      localStorage.setItem('token', data.token);
+      setIsLoggedIn(true);
+      setError('');
+      onHide();
     } catch (err) {
-      setError('Server error. Please try again.');
+      setError(err.response?.data?.message || 'Login failed');
     }
   };
 
   return (
     <Modal show={show} onHide={onHide} centered>
-      <Modal.Header closeButton>
-        <Modal.Title>Login</Modal.Title>
-      </Modal.Header>
+      <Modal.Header closeButton><Modal.Title>Login</Modal.Title></Modal.Header>
       <Modal.Body>
         <Form onSubmit={handleLogin}>
-          <Form.Group controlId="formUsername" className="mb-3">
+          <Form.Group className="mb-3">
             <Form.Label>Username</Form.Label>
-            <Form.Control
-              type="text"
-              placeholder="Enter username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              required
-            />
+            <Form.Control value={username} onChange={(e) => setUsername(e.target.value)} required />
           </Form.Group>
-          <Form.Group controlId="formPassword" className="mb-3">
+          <Form.Group className="mb-3">
             <Form.Label>Password</Form.Label>
-            <Form.Control
-              type="password"
-              placeholder="Enter password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
+            <Form.Control type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
           </Form.Group>
           {error && <p className="text-danger">{error}</p>}
-          <Button variant="primary" type="submit">
-            Login
-          </Button>
+          <Button type="submit">Login</Button>
         </Form>
       </Modal.Body>
     </Modal>

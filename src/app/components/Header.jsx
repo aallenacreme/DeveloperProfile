@@ -1,25 +1,20 @@
 import { useState, useEffect, useRef } from 'react';
 import { Navbar, Container, Button } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
-import { authFetch, useAuth } from '../auth';
+import { useAuth } from '../auth';
 import RainbowBall from './Rainbowball';
 import animateBallBounce from './animateBounceBall';
 import LoginModal from './LoginModal';
 import StarField from './Starfield';
 import './Header.css';
 
-function Header({ aboutSectionRef }) {
+function Header({ aboutSectionRef, profileData, }) {
   const [scrolled, setScrolled] = useState(false);
   const [scrollingUp, setScrollingUp] = useState(false);
   const [activeLink, setActiveLink] = useState('home');
   const [lastScrollY, setLastScrollY] = useState(0);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const { isLoggedIn, setIsLoggedIn } = useAuth();
-  const [profileData, setProfileData] = useState({
-    name: 'AllenMahdi',
-    headerTitle: 'AllenMahdi',
-    headerSubtitle: 'Software Developer',
-  });
 
   const ballRef = useRef(null);
   const titleLetterRefs = useRef([]);
@@ -27,35 +22,9 @@ function Header({ aboutSectionRef }) {
   const lastNameRef = useRef(null);
   const subtitleRef = useRef(null);
 
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const response = await authFetch('http://localhost:5000/api/profile');
-        if (response.ok) {
-          const data = await response.json();
-          setProfileData({
-            name: data.name || 'AllenMahdi',
-            headerTitle: data.headerTitle || 'AllenMahdi',
-            headerSubtitle: data.headerSubtitle || 'Software Developer',
-          });
-        } else {
-          console.error('Failed to fetch profile:', await response.text());
-        }
-      } catch (err) {
-        console.error('Error fetching profile:', err);
-      }
-    };
-    fetchProfile();
-  }, [isLoggedIn]);
-
   const handleLogout = () => {
-    localStorage.removeItem('token'); // Clear token
-    setIsLoggedIn(false); // Update auth state
-    setProfileData({
-      name: 'AllenMahdi',
-      headerTitle: 'AllenMahdi',
-      headerSubtitle: 'Software Developer',
-    }); // Reset profile data
+    localStorage.removeItem('token');
+    setIsLoggedIn(false);
   };
 
   useEffect(() => {
@@ -80,7 +49,7 @@ function Header({ aboutSectionRef }) {
         aboutSectionRef
       );
     }, 500);
-  }, [aboutSectionRef]);
+  }, [aboutSectionRef, profileData.headerTitle, profileData.headerSubtitle]);
 
   const handleSetActive = (link) => {
     setActiveLink(link);
@@ -99,6 +68,7 @@ function Header({ aboutSectionRef }) {
 
   const [firstName, lastName] = splitName(profileData.headerTitle);
 
+  // Clear and rebuild titleLetterRefs when name changes
   titleLetterRefs.current = [];
 
   return (

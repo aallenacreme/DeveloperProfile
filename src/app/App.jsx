@@ -11,8 +11,7 @@ function App() {
     <AuthProvider>
       <Router>
         <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/edit-profile" element={<EditProfile />} />
+          <Route path="/*" element={<HomePage />} />
           <Route path="/tenzies" element={<TenziesGame />} />
         </Routes>
       </Router>

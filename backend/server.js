@@ -12,97 +12,42 @@ app.use(express.json());
 const db = new sqlite3.Database('./users.db', (err) => {
   if (err) {
     console.error('Database error:', err.message);
-  } else {
-    console.log('Connected to SQLite database.');
-    db.run(`CREATE TABLE IF NOT EXISTS users (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      username TEXT UNIQUE NOT NULL,
-      password TEXT NOT NULL
-    )`, (err) => {
-      if (err) {
-        console.error('Error creating users table:', err.message);
-      } else {
-        db.run(`INSERT OR IGNORE INTO users (username, password) VALUES (?, ?)`,
-          ['testuser', 'testpassword'], (err) => {
-            if (err) console.error('Error inserting user:', err.message);
-          });
-      }
-    });
-    db.run(`CREATE TABLE IF NOT EXISTS profiles (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      username TEXT UNIQUE NOT NULL,
-      name TEXT,
-      headerTitle TEXT,
-      headerSubtitle TEXT,
-      collegeProgress TEXT,
-      javaSkills TEXT,
-      sqlSkills TEXT,
-      footerText TEXT,
-      projectTitle TEXT,
-      projectSubtitle TEXT,
-      projectDuration TEXT,
-      projectDescription TEXT,
-      projectDetails TEXT
-    )`, (err) => {
-      if (err) {
-        console.error('Error creating profiles table:', err.message);
-      } else {
-        const profileData = {
-          name: 'Allen',
-          collegeProgress: [
-            'Completed 60 credits toward my Computer Science degree',
-            'Aced courses like Data Structures, Algorithms, and Web Development',
-            'Currently working on a capstone project for a local business',
-            'Maintaining a 3.8 GPA',
-          ],
-          javaSkills: [
-            'Proficient in object-oriented programming',
-            'Built invoice generation programs with formatted output',
-            'Experienced with exception handling and file I/O',
-            'Developed applications using JDBC for database connectivity',
-          ],
-          sqlSkills: [
-            'Skilled in writing complex queries with joins and aggregations',
-            'Created PL/SQL procedures for invoice generation',
-            'Experienced with triggers and the EVENT-CONDITION-ACTION model',
-            'Proficient in using cursors and prepared statements',
-          ],
-          headerTitle: 'Allen Mahdi',
-          headerSubtitle: 'Software Developer',
-          footerText: 'Footer',
-          projectTitle: 'Motion-Controlled Kiosk System',
-          projectSubtitle: 'Class Project – Computer Science Course, University of New Orleans',
-          projectDuration: 'August 2024 – Present',
-          projectDescription: 'Developing a user-friendly interface for a Raspberry Pi-based kiosk system enabling motionless hand interactions through LeetMotion technology.',
-          projectDetails: [
-            'Utilizing Python and LeetMotion for advanced gesture recognition capabilities.',
-            'Focused on enhancing accessibility and user interaction in school environments.',
-            'Collaborating in a team of 25 to design, test, and deploy the system across campus TVs.',
-            'Emphasis on robust performance and usability in public-facing deployments.'
-          ]
-        };
-        db.run(`INSERT OR REPLACE INTO profiles (username, name, headerTitle, headerSubtitle, collegeProgress, javaSkills, sqlSkills, footerText, projectTitle, projectSubtitle, projectDuration, projectDescription, projectDetails)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-          [
-            'testuser',
-            profileData.name,
-            profileData.headerTitle,
-            profileData.headerSubtitle,
-            JSON.stringify(profileData.collegeProgress),
-            JSON.stringify(profileData.javaSkills),
-            JSON.stringify(profileData.sqlSkills),
-            profileData.footerText,
-            profileData.projectTitle,
-            profileData.projectSubtitle,
-            profileData.projectDuration,
-            profileData.projectDescription,
-            JSON.stringify(profileData.projectDetails)
-          ], (err) => {
-            if (err) console.error('Error inserting default profile:', err.message);
-          });
-      }
-    });
+    return;
   }
+  console.log('Connected to SQLite database.');
+
+  // Create users table
+  db.run(`CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT UNIQUE NOT NULL,
+    password TEXT NOT NULL
+  )`, (err) => {
+    if (err) {
+      console.error('Error creating users table:', err.message);
+    }
+  });
+
+  // Create profiles table
+  db.run(`CREATE TABLE IF NOT EXISTS profiles (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT UNIQUE NOT NULL,
+    name TEXT,
+    headerTitle TEXT,
+    headerSubtitle TEXT,
+    collegeProgress TEXT,
+    javaSkills TEXT,
+    sqlSkills TEXT,
+    footerText TEXT,
+    projectTitle TEXT,
+    projectSubtitle TEXT,
+    projectDuration TEXT,
+    projectDescription TEXT,
+    projectDetails TEXT
+  )`, (err) => {
+    if (err) {
+      console.error('Error creating profiles table:', err.message);
+    }
+  });
 });
 
 const JWT_SECRET = 'your-secret-key';
@@ -128,6 +73,7 @@ const swaggerOptions = {
   },
   apis: ['./server.js'],
 };
+
 const swaggerDocs = swaggerJsDoc(swaggerOptions);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
@@ -197,8 +143,7 @@ app.post('/api/logout', (req, res) => {
   if (!token) {
     return res.status(401).json({ error: 'No token provided' });
   }
-  // In a real app, you might invalidate the token server-side (e.g., blacklist it)
-  // For JWT, client-side token removal is often sufficient
+  // Token invalidation could be handled here if needed (e.g., token blacklist)
   res.json({ message: 'Logout successful' });
 });
 
@@ -219,11 +164,11 @@ app.post('/api/logout', (req, res) => {
  */
 app.get('/api/profile', (req, res) => {
   const token = req.headers['authorization']?.split(' ')[1];
-  let username = 'testuser'; // Default to testuser if no token
+  let username = 'testuser'; // Default fallback username if no token
   if (token) {
     jwt.verify(token, JWT_SECRET, (err, decoded) => {
       if (!err) {
-        username = decoded.username; // Use authenticated username if token is valid
+        username = decoded.username;
       }
       fetchProfile(username, res);
     });
