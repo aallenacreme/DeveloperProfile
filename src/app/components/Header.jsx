@@ -145,16 +145,9 @@ function Header({ aboutSectionRef, profileData, }) {
               >
                 <Button variant="outline-light" className="nav-button">
                   <span className="github-text">GitHub</span>
-                  <span className="github-icon">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                      <path
-                        fillRule="evenodd"
-                        clipRule="evenodd"
-                        d="M12 2C6.477 2...10z"
-                        fill="currentColor"
-                      />
-                    </svg>
-                  </span>
+                 
+              
+                  
                 </Button>
               </a>
               {isLoggedIn && (

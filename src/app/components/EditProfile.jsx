@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Container, Form, Button, Alert } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth';
-import axiosInstance from './axiosInstance';
+import { axiosAuthInstance } from './axiosInstance'; // 
 
 function EditProfile({ profileData, setProfileData }) {
   const { isLoggedIn } = useAuth();
@@ -40,7 +40,7 @@ function EditProfile({ profileData, setProfileData }) {
       return;
     }
     try {
-      await axiosInstance.put('/profile', profileData);
+      await axiosAuthInstance.put('/profile', profileData); // Changed to axiosAuthInstance
       setSuccess('Profile updated successfully!');
       setError('');
       setTimeout(() => navigate('/'), 2000);

@@ -1,3 +1,4 @@
+// HomePage.jsx
 import { useState, useEffect, useRef } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { Container } from 'react-bootstrap';
@@ -5,7 +6,7 @@ import Header from '../../components/Header';
 import MainContent from '../../components/MainContent';
 import Footer from '../../components/Footer';
 import EditProfile from '../../components/EditProfile';
-import axiosInstance from '../../components/axiosInstance';
+import { axiosInstance } from '../../components/axiosInstance';
 
 function HomePage() {
   const aboutSectionRef = useRef(null);
@@ -45,29 +46,11 @@ function HomePage() {
 
   return (
     <>
-      <Header 
-        aboutSectionRef={aboutSectionRef} 
-        profileData={profileData}
-      />
-      
+      <Header aboutSectionRef={aboutSectionRef} profileData={profileData} />
       <Routes>
-        <Route path="/" element={
-          <MainContent 
-            aboutSectionRef={aboutSectionRef} 
-            profileData={profileData}
-          />
-        } />
-        <Route 
-          path="/edit-profile" 
-          element={
-            <EditProfile 
-              profileData={profileData} 
-              setProfileData={setProfileData} 
-            />
-          } 
-        />
+        <Route path="/" element={<MainContent aboutSectionRef={aboutSectionRef} profileData={profileData} />} />
+        <Route path="/edit-profile" element={<EditProfile profileData={profileData} setProfileData={setProfileData} />} />
       </Routes>
-
       <Footer profileData={profileData} />
     </>
   );

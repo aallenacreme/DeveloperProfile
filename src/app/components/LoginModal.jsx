@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Modal, Form, Button } from 'react-bootstrap';
 import { useAuth } from '../auth';
-import axiosInstance from './axiosInstance';
+import { axiosInstance } from './axiosInstance';
 
 function LoginModal({ show, onHide }) {
   const [username, setUsername] = useState('');

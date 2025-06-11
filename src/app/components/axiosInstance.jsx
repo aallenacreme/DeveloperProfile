@@ -1,6 +1,7 @@
-// src/axiosInstance.js
+// components/axiosInstance.js
 import axios from 'axios';
 
+// Public instance (no forced authentication)
 const axiosInstance = axios.create({
   baseURL: 'http://localhost:5000/api',
   headers: {
@@ -8,7 +9,15 @@ const axiosInstance = axios.create({
   },
 });
 
-axiosInstance.interceptors.request.use((config) => {
+
+const axiosAuthInstance = axios.create({
+  baseURL: 'http://localhost:5000/api',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+axiosAuthInstance.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
@@ -16,4 +25,4 @@ axiosInstance.interceptors.request.use((config) => {
   return config;
 });
 
-export default axiosInstance;
+export { axiosInstance, axiosAuthInstance }; // Named exports
