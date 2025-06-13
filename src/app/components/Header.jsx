@@ -1,17 +1,17 @@
-import { useState, useEffect, useRef } from 'react';
-import { Navbar, Container, Button } from 'react-bootstrap';
-import { Link } from 'react-router-dom';
-import { useAuth } from '../auth';
-import RainbowBall from './Rainbowball';
-import animateBallBounce from './animateBounceBall';
-import LoginModal from './LoginModal';
-import StarField from './Starfield';
-import './Header.css';
+import { useState, useEffect, useRef } from "react";
+import { Navbar, Container, Button } from "react-bootstrap";
+import { Link } from "react-router-dom";
+import { useAuth } from "../auth";
+import RainbowBall from "./Rainbowball";
+import animateBallBounce from "./animateBounceBall";
+import LoginModal from "./LoginModal";
+import StarField from "./Starfield";
+import "./Header.css";
 
-function Header({ aboutSectionRef, profileData, }) {
+function Header({ aboutSectionRef, profileData }) {
   const [scrolled, setScrolled] = useState(false);
   const [scrollingUp, setScrollingUp] = useState(false);
-  const [activeLink, setActiveLink] = useState('home');
+  const [activeLink, setActiveLink] = useState("home");
   const [lastScrollY, setLastScrollY] = useState(0);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const { isLoggedIn, setIsLoggedIn } = useAuth();
@@ -23,7 +23,7 @@ function Header({ aboutSectionRef, profileData, }) {
   const subtitleRef = useRef(null);
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
+    localStorage.removeItem("token");
     setIsLoggedIn(false);
   };
 
@@ -34,8 +34,8 @@ function Header({ aboutSectionRef, profileData, }) {
       setScrollingUp(currentScrollY < lastScrollY && currentScrollY > 20);
       setLastScrollY(currentScrollY);
     };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, [lastScrollY]);
 
   useEffect(() => {
@@ -56,14 +56,17 @@ function Header({ aboutSectionRef, profileData, }) {
   };
 
   const splitName = (name) => {
-    if (!name) return ['Allen', 'Mahdi'];
+    if (!name) return ["Allen", "Mahdi"];
     const trimmedName = name.trim();
     const splitIndex = trimmedName
-      .split('')
+      .split("")
       .findIndex((char, i) => i > 0 && char === char.toUpperCase());
     return splitIndex === -1
-      ? [trimmedName, '']
-      : [trimmedName.substring(0, splitIndex), trimmedName.substring(splitIndex)];
+      ? [trimmedName, ""]
+      : [
+          trimmedName.substring(0, splitIndex),
+          trimmedName.substring(splitIndex),
+        ];
   };
 
   const [firstName, lastName] = splitName(profileData.headerTitle);
@@ -78,7 +81,7 @@ function Header({ aboutSectionRef, profileData, }) {
         <div className="title-container">
           <h1 className="name-container">
             <span className="first-name" ref={firstNameRef}>
-              {firstName.split('').map((letter, i) => (
+              {firstName.split("").map((letter, i) => (
                 <span
                   key={`first-${i}`}
                   className="letter"
@@ -89,7 +92,7 @@ function Header({ aboutSectionRef, profileData, }) {
               ))}
             </span>
             <span className="last-name" ref={lastNameRef}>
-              {lastName.split('').map((letter, i) => (
+              {lastName.split("").map((letter, i) => (
                 <span
                   key={`last-${i}`}
                   className="letter"
@@ -110,30 +113,50 @@ function Header({ aboutSectionRef, profileData, }) {
       <Navbar
         fixed="top"
         expand="lg"
-        className={`navbar-glass ${scrolled ? 'scrolled' : ''} ${scrollingUp ? 'scrolling-up' : ''}`}
+        className={`navbar-glass ${scrolled ? "scrolled" : ""} ${
+          scrollingUp ? "scrolling-up" : ""
+        }`}
       >
         <Container className="nav-container">
           <Navbar.Brand className="gradient-brand">
-            {profileData.name || 'AllenMahdi'}
+            {profileData.name || "AllenMahdi"}
           </Navbar.Brand>
-          <Navbar.Toggle aria-controls="basic-navbar-nav" className="custom-toggler" />
-          <Navbar.Collapse id="basic-navbar-nav" className="justify-content-end">
+          <Navbar.Toggle
+            aria-controls="basic-navbar-nav"
+            className="custom-toggler"
+          />
+          <Navbar.Collapse
+            id="basic-navbar-nav"
+            className="justify-content-end"
+          >
             <div className="nav-buttons">
               <Link
                 to="/"
-                className={`nav-link ${activeLink === 'home' ? 'active' : ''}`}
-                onClick={() => handleSetActive('home')}
+                className={`nav-link ${activeLink === "home" ? "active" : ""}`}
+                onClick={() => handleSetActive("home")}
               >
-                <Button variant="outline-light" className={`nav-button ${activeLink === 'home' ? 'active' : ''}`}>
+                <Button
+                  variant="outline-light"
+                  className={`nav-button ${
+                    activeLink === "home" ? "active" : ""
+                  }`}
+                >
                   Home
                 </Button>
               </Link>
               <Link
                 to="/tenzies"
-                className={`nav-link ${activeLink === 'output' ? 'active' : ''}`}
-                onClick={() => handleSetActive('output')}
+                className={`nav-link ${
+                  activeLink === "output" ? "active" : ""
+                }`}
+                onClick={() => handleSetActive("output")}
               >
-                <Button variant="outline-light" className={`nav-button ${activeLink === 'output' ? 'active' : ''}`}>
+                <Button
+                  variant="outline-light"
+                  className={`nav-button ${
+                    activeLink === "output" ? "active" : ""
+                  }`}
+                >
                   Output
                 </Button>
               </Link>
@@ -145,18 +168,28 @@ function Header({ aboutSectionRef, profileData, }) {
               >
                 <Button variant="outline-light" className="nav-button">
                   <span className="github-text">GitHub</span>
-                 
-              
-                  
                 </Button>
               </a>
+              <Link to="/create-profile" className="nav-link">
+                <Button variant="outline-light" className="nav-button">
+                  Create Profile
+                </Button>
+              </Link>
+
               {isLoggedIn && (
                 <Link
                   to="/edit-profile"
-                  className={`nav-link ${activeLink === 'edit-profile' ? 'active' : ''}`}
-                  onClick={() => handleSetActive('edit-profile')}
+                  className={`nav-link ${
+                    activeLink === "edit-profile" ? "active" : ""
+                  }`}
+                  onClick={() => handleSetActive("edit-profile")}
                 >
-                  <Button variant="outline-light" className={`nav-button ${activeLink === 'edit-profile' ? 'active' : ''}`}>
+                  <Button
+                    variant="outline-light"
+                    className={`nav-button ${
+                      activeLink === "edit-profile" ? "active" : ""
+                    }`}
+                  >
                     Edit Profile
                   </Button>
                 </Link>
@@ -164,16 +197,21 @@ function Header({ aboutSectionRef, profileData, }) {
               <Button
                 variant="outline-light"
                 className="nav-button"
-                onClick={isLoggedIn ? handleLogout : () => setShowLoginModal(true)}
+                onClick={
+                  isLoggedIn ? handleLogout : () => setShowLoginModal(true)
+                }
               >
-                {isLoggedIn ? 'Logout' : 'Login'}
+                {isLoggedIn ? "Logout" : "Login"}
               </Button>
             </div>
           </Navbar.Collapse>
         </Container>
       </Navbar>
 
-      <LoginModal show={showLoginModal} onHide={() => setShowLoginModal(false)} />
+      <LoginModal
+        show={showLoginModal}
+        onHide={() => setShowLoginModal(false)}
+      />
     </>
   );
 }
