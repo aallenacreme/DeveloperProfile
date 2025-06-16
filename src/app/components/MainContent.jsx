@@ -1,23 +1,22 @@
-import { useEffect, useRef } from 'react';
-import { Container, Row, Col } from 'react-bootstrap';
-import './MainContent.css';
-import './AboutSection.css';
-import './TimelineSection.css';
-import './SkillsSection.css';
-import './ProjectSection.css';
-import java from '../assets/images/java.svg';
-import dns from '../assets/images/dns.svg';
-import sql from '../assets/images/sql.svg';
-import learn from '../assets/images/learn.svg';
-import javascript from '../assets/images/javascript.svg';
-import cpp from '../assets/images/cpp.svg';
-import react from '../assets/images/react.svg';
+import { useEffect, useRef } from "react";
+import { Container, Row, Col } from "react-bootstrap";
+import "./MainContent.css";
+import "./AboutSection.css";
+import "./TimelineSection.css";
+import "./SkillsSection.css";
+import "./ProjectSection.css";
+import java from "../assets/images/java.svg";
+import dns from "../assets/images/dns.svg";
+import sql from "../assets/images/sql.svg";
+import learn from "../assets/images/learn.svg";
+import javascript from "../assets/images/javascript.svg";
+import cpp from "../assets/images/cpp.svg";
+import react from "../assets/images/react.svg";
 
 function MainContent({ aboutSectionRef, profileData }) {
   const skillsSectionRef = useRef(null);
   const timelineSectionRef = useRef(null);
   const projectSectionRef = useRef(null);
- 
 
   useEffect(() => {
     const scrollFadeInSections = [
@@ -25,13 +24,13 @@ function MainContent({ aboutSectionRef, profileData }) {
       timelineSectionRef.current,
       skillsSectionRef.current,
       projectSectionRef.current,
-    ].filter(ref => ref);
+    ].filter((ref) => ref);
 
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
-            entry.target.classList.add('is-visible');
+            entry.target.classList.add("is-visible");
             observer.unobserve(entry.target);
           }
         });
@@ -39,12 +38,12 @@ function MainContent({ aboutSectionRef, profileData }) {
       { threshold: 0.3 }
     );
 
-    scrollFadeInSections.forEach(section => {
+    scrollFadeInSections.forEach((section) => {
       if (section) observer.observe(section);
     });
 
     return () => {
-      scrollFadeInSections.forEach(section => {
+      scrollFadeInSections.forEach((section) => {
         if (section) observer.unobserve(section);
       });
     };
@@ -62,7 +61,7 @@ function MainContent({ aboutSectionRef, profileData }) {
           ))}
         </div>
       </div>
-      
+
       {/* About Section */}
       <Row className="about-section" ref={aboutSectionRef}>
         <Col xs={12} className="about-content-col">
@@ -79,7 +78,7 @@ function MainContent({ aboutSectionRef, profileData }) {
             </div>
             <div className="about-content">
               <p>
-                Hey I'm <span className="highlight">{profileData.name || 'Allen'}</span>, a passionate computer science student starting my 4th year. I'm getting into web development and looking to learn more about building clean, functional websites. I'm excited to grow my skills and work on projects that make a difference.
+                <span className="highlight">{profileData.bio}</span>
               </p>
               <div className="interests-container">
                 <div className="interest-tag">Web Development</div>
@@ -152,7 +151,11 @@ function MainContent({ aboutSectionRef, profileData }) {
                 </div>
                 <h4>Adaptive Learning</h4>
                 <div className="skill-content">
-                  <img src={learn} alt="Adaptive Learning" className="skill-img" />
+                  <img
+                    src={learn}
+                    alt="Adaptive Learning"
+                    className="skill-img"
+                  />
                 </div>
               </div>
             </Col>
@@ -163,7 +166,11 @@ function MainContent({ aboutSectionRef, profileData }) {
                 </div>
                 <h4>JavaScript</h4>
                 <div className="skill-content">
-                  <img src={javascript} alt="JavaScript" className="skill-img" />
+                  <img
+                    src={javascript}
+                    alt="JavaScript"
+                    className="skill-img"
+                  />
                 </div>
               </div>
             </Col>
@@ -203,9 +210,13 @@ function MainContent({ aboutSectionRef, profileData }) {
           <div className="project-content-wrapper">
             <div className="project-card">
               <h3 className="project-title">{profileData.projectTitle}</h3>
-              <h4 className="project-subtitle">{profileData.projectSubtitle}</h4>
+              <h4 className="project-subtitle">
+                {profileData.projectSubtitle}
+              </h4>
               <p className="project-duration">{profileData.projectDuration}</p>
-              <p className="project-description">{profileData.projectDescription}</p>
+              <p className="project-description">
+                {profileData.projectDescription}
+              </p>
               <ul className="project-details-list">
                 {profileData.projectDetails.map((detail, index) => (
                   <li key={index} className="project-detail-item">
