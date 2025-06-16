@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from "react";
 import { Navbar, Container, Button } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import { useAuth } from "../auth";
-// import RainbowBall from './Rainbowball';
 import animateBallBounce from "./animateBounceBall";
 import LoginModal from "./LoginModal";
 import SignupModal from "./SignupModal";
@@ -16,6 +15,7 @@ function Header({ aboutSectionRef, profileData }) {
   const [lastScrollY, setLastScrollY] = useState(0);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showSignupModal, setShowSignupModal] = useState(false);
+  const [isNavExpanded, setIsNavExpanded] = useState(false); // New state for navbar collapse
   const { isLoggedIn, logout } = useAuth();
 
   const ballRef = useRef(null);
@@ -27,6 +27,7 @@ function Header({ aboutSectionRef, profileData }) {
   const handleLogout = async () => {
     try {
       await logout();
+      setIsNavExpanded(false); // Collapse navbar on logout
     } catch (err) {
       console.error("Logout failed:", err);
     }
@@ -58,6 +59,11 @@ function Header({ aboutSectionRef, profileData }) {
 
   const handleSetActive = (link) => {
     setActiveLink(link);
+    setIsNavExpanded(false); // Collapse navbar when a link is clicked
+  };
+
+  const toggleNav = () => {
+    setIsNavExpanded(!isNavExpanded); // Toggle navbar collapse state
   };
 
   const splitName = (name) => {
@@ -110,7 +116,6 @@ function Header({ aboutSectionRef, profileData }) {
           <p className="subtitle" ref={subtitleRef}>
             {profileData.headerSubtitle}
           </p>
-          {/* <RainbowBall ref={ballRef} /> */}
         </div>
       </div>
 
@@ -120,6 +125,7 @@ function Header({ aboutSectionRef, profileData }) {
         className={`navbar-glass ${scrolled ? "scrolled" : ""} ${
           scrollingUp ? "scrolling-up" : ""
         }`}
+        expanded={isNavExpanded} // Control collapse state
       >
         <Container className="nav-container">
           <Navbar.Brand className="gradient-brand">
@@ -128,6 +134,7 @@ function Header({ aboutSectionRef, profileData }) {
           <Navbar.Toggle
             aria-controls="basic-navbar-nav"
             className="custom-toggler"
+            onClick={toggleNav} // Toggle navbar on click
           />
           <Navbar.Collapse
             id="basic-navbar-nav"
@@ -161,7 +168,7 @@ function Header({ aboutSectionRef, profileData }) {
                     activeLink === "output" ? "active" : ""
                   }`}
                 >
-                  Output
+                  Tenzies
                 </Button>
               </Link>
               <a
@@ -169,16 +176,13 @@ function Header({ aboutSectionRef, profileData }) {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="nav-link"
+                onClick={() => setIsNavExpanded(false)} // Collapse navbar on click
               >
                 <Button variant="outline-light" className="nav-button">
                   <span className="github-text">GitHub</span>
                 </Button>
               </a>
-              <Link to="/create-profile" className="nav-link">
-                <Button variant="outline-light" className="nav-button">
-                  Create Profile
-                </Button>
-              </Link>
+
               {isLoggedIn && (
                 <Link
                   to="/edit-profile"
@@ -201,7 +205,10 @@ function Header({ aboutSectionRef, profileData }) {
                 <Button
                   variant="outline-light"
                   className="nav-button"
-                  onClick={() => setShowSignupModal(true)}
+                  onClick={() => {
+                    setShowSignupModal(true);
+                    setIsNavExpanded(false); // Collapse navbar on click
+                  }}
                 >
                   Sign Up
                 </Button>
@@ -210,7 +217,12 @@ function Header({ aboutSectionRef, profileData }) {
                 variant="outline-light"
                 className="nav-button"
                 onClick={
-                  isLoggedIn ? handleLogout : () => setShowLoginModal(true)
+                  isLoggedIn
+                    ? handleLogout
+                    : () => {
+                        setShowLoginModal(true);
+                        setIsNavExpanded(false); // Collapse navbar on click
+                      }
                 }
               >
                 {isLoggedIn ? "Logout" : "Login"}

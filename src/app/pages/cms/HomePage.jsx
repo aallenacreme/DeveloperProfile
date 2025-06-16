@@ -8,67 +8,54 @@ import EditProfile from "../../components/EditProfile";
 import { supabase } from "../../services/supabaseClient";
 import { useAuth } from "../../auth";
 
-const defaultProfile = {
-  name: "",
-  headerTitle: "",
-  headerSubtitle: "",
-  bio: "",
-  collegeProgress: [],
-  projectTitle: "",
-  projectSubtitle: "",
-  projectDuration: "",
-  projectDescription: "",
-  projectDetails: [],
-};
-
-const fallbackProfile = {
-  ...defaultProfile,
-  name: "AllenMahdi",
-  headerTitle: "AllenMahdi",
-  headerSubtitle: "Software Developer",
-};
-
 function HomePage() {
   const aboutSectionRef = useRef(null);
   const { user } = useAuth();
-  const [profileData, setProfileData] = useState(defaultProfile);
+  const [profileData, setProfileData] = useState({
+    name: "",
+    headerTitle: "",
+    headerSubtitle: "",
+    bio: "",
+    interests: [],
+    collegeProgress: [],
+    projectTitle: "",
+    projectSubtitle: "",
+    projectDuration: "",
+    projectDescription: "",
+    projectDetails: [],
+  });
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (!user) {
-      setProfileData(defaultProfile);
-      return;
-    }
-
     const fetchProfile = async () => {
-      try {
-        const { data, error } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("user_id", user.id)
-          .single();
+      const { data } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("user_id", user ? user.id : "2c21ff55-494a-4e13-bd95-80505ceed600")
+        .single();
 
-        if (error) throw error;
-
-        setProfileData({
-          name: data.name || "",
-          headerTitle: data.header_title || "",
-          headerSubtitle: data.header_subtitle || "",
-          bio: data.bio || "",
-          collegeProgress: data.college_progress || [],
-          projectTitle: data.project_title || "",
-          projectSubtitle: data.project_subtitle || "",
-          projectDuration: data.project_duration || "",
-          projectDescription: data.project_description || "",
-          projectDetails: data.project_details || [],
-        });
-      } catch (err) {
-        console.error("Failed to fetch profile:", err.message);
-        setProfileData(fallbackProfile);
-      }
+      setProfileData({
+        name: data.name || "",
+        headerTitle: data.header_title || "",
+        headerSubtitle: data.header_subtitle || "",
+        bio: data.bio || "",
+        interests: data.interests || [],
+        collegeProgress: data.college_progress || [],
+        projectTitle: data.project_title || "",
+        projectSubtitle: data.project_subtitle || "",
+        projectDuration: data.project_duration || "",
+        projectDescription: data.project_description || "",
+        projectDetails: data.project_details || [],
+      });
+      setIsLoading(false);
     };
 
     fetchProfile();
   }, [user]);
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <>
