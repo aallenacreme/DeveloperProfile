@@ -1,302 +1,179 @@
 import { useState } from 'react';
-import { Container, Form, Button, Alert } from 'react-bootstrap';
-import { useNavigate } from 'react-router-dom';
+import { Form, Button, Container, Row, Col } from 'react-bootstrap';
+import { supabase } from '../services/supabaseClient';
 import { useAuth } from '../auth';
-import { axiosAuthInstance } from './axiosInstance'; // 
 
 function EditProfile({ profileData, setProfileData }) {
-  const { isLoggedIn } = useAuth();
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
-  const navigate = useNavigate();
+  const { user } = useAuth();
+  const [formData, setFormData] = useState({
+    name: profileData.name || '',
+    headerTitle: profileData.headerTitle || '',
+    headerSubtitle: profileData.headerSubtitle || '',
+    collegeProgress: profileData.collegeProgress.join('\n') || '',
+    projectTitle: profileData.projectTitle || '',
+    projectSubtitle: profileData.projectSubtitle || '',
+    projectDuration: profileData.projectDuration || '',
+    projectDescription: profileData.projectDescription || '',
+    projectDetails: profileData.projectDetails.join('\n') || '',
+  });
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setProfileData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleArrayChange = (e, field, index) => {
-    const newArray = [...profileData[field]];
-    newArray[index] = e.target.value;
-    setProfileData((prev) => ({ ...prev, [field]: newArray }));
-  };
-
-  const addArrayItem = (field) => {
-    setProfileData((prev) => ({ 
-      ...prev, 
-      [field]: [...prev[field], '']
-    }));
-  };
-
-  const removeArrayItem = (field, index) => {
-    const newArray = profileData[field].filter((_, i) => i !== index);
-    setProfileData((prev) => ({ ...prev, [field]: newArray }));
+    setFormData({ ...formData, [name]: value });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!isLoggedIn) {
-      setError('You must be logged in to save changes');
-      return;
-    }
     try {
-      await axiosAuthInstance.put('/profile', profileData); // Changed to axiosAuthInstance
-      setSuccess('Profile updated successfully!');
-      setError('');
-      setTimeout(() => navigate('/'), 2000);
+      if (!user || !user.id) throw new Error('User is not authenticated');
+
+      // Use formData.name as fallback for username if user.user_metadata.username is missing
+      const username = user.user_metadata?.username || formData.name || 'default_user';
+
+      // Check for username conflict
+      const { data: existingProfile, error: checkError } = await supabase
+        .from('profiles')
+        .select('user_id')
+        .eq('username', username)
+        .neq('user_id', user.id)
+        .single();
+
+      if (checkError && checkError.code !== 'PGRST116') throw checkError;
+      if (existingProfile) throw new Error('Username is already taken by another user');
+
+      const updates = {
+        name: formData.name,
+        header_title: formData.headerTitle,
+        header_subtitle: formData.headerSubtitle,
+        college_progress: formData.collegeProgress.split('\n').filter(Boolean),
+        project_title: formData.projectTitle,
+        project_subtitle: formData.projectSubtitle,
+        project_duration: formData.projectDuration,
+        project_description: formData.projectDescription,
+        project_details: formData.projectDetails.split('\n').filter(Boolean),
+      };
+
+      const { error } = await supabase
+        .from('profiles')
+        .upsert(
+          { user_id: user.id, username, ...updates },
+          { onConflict: ['user_id'] }
+        );
+
+      if (error) throw error;
+
+      setProfileData({
+        name: formData.name,
+        headerTitle: formData.headerTitle,
+        headerSubtitle: formData.headerSubtitle,
+        collegeProgress: formData.collegeProgress.split('\n').filter(Boolean),
+        projectTitle: formData.projectTitle,
+        projectSubtitle: formData.projectSubtitle,
+        projectDuration: formData.projectDuration,
+        projectDescription: formData.projectDescription,
+        projectDetails: formData.projectDetails.split('\n').filter(Boolean),
+      });
+      alert('Profile updated successfully!');
     } catch (err) {
-      console.error('Update error:', err.response?.data || err.message);
-      setError(err.response?.data?.message || 'Failed to update profile');
+      console.error('Failed to update profile:', err.message, err);
+      alert(`Failed to update profile: ${err.message}`);
     }
   };
 
   return (
-    <Container className="my-5 edit-profile-container">
-      <h2 className="text-gradient mb-4">Edit Profile</h2>
-      {error && <Alert variant="danger" onClose={() => setError('')} dismissible>{error}</Alert>}
-      {success && <Alert variant="success">{success}</Alert>}
-      
-      <Form onSubmit={handleSubmit} className="profile-form">
-        {/* Basic Info Section */}
-        <div className="form-section">
-          <h4 className="section-title">Basic Information</h4>
-          <Form.Group className="mb-3">
-            <Form.Label>Name</Form.Label>
-            <Form.Control
-              type="text"
-              name="name"
-              value={profileData.name}
-              onChange={handleChange}
-              disabled={!isLoggedIn}
-            />
-          </Form.Group>
-
-          <Form.Group className="mb-3">
-            <Form.Label>Header Title</Form.Label>
-            <Form.Control
-              type="text"
-              name="headerTitle"
-              value={profileData.headerTitle}
-              onChange={handleChange}
-              disabled={!isLoggedIn}
-            />
-          </Form.Group>
-
-          <Form.Group className="mb-3">
-            <Form.Label>Header Subtitle</Form.Label>
-            <Form.Control
-              type="text"
-              name="headerSubtitle"
-              value={profileData.headerSubtitle}
-              onChange={handleChange}
-              disabled={!isLoggedIn}
-            />
-          </Form.Group>
-        </div>
-
-        {/* College Progress Section */}
-        <div className="form-section">
-          <h4 className="section-title">College Progress</h4>
-          {profileData.collegeProgress.map((item, index) => (
-            <div key={index} className="array-item-group mb-2">
+    <Container className='my-5'>
+      <Row>
+        <Col md={{ span: 8, offset: 2 }}>
+          <h2>Edit Profile</h2>
+          <Form onSubmit={handleSubmit}>
+            <Form.Group className='mb-3'>
+              <Form.Label>Name</Form.Label>
               <Form.Control
-                type="text"
-                value={item}
-                onChange={(e) => handleArrayChange(e, 'collegeProgress', index)}
-                disabled={!isLoggedIn}
+                type='text'
+                name='name'
+                value={formData.name}
+                onChange={handleChange}
               />
-              {isLoggedIn && (
-                <Button 
-                  variant="outline-danger" 
-                  onClick={() => removeArrayItem('collegeProgress', index)}
-                  className="ms-2"
-                >
-                  Remove
-                </Button>
-              )}
-            </div>
-          ))}
-          {isLoggedIn && (
-            <Button 
-              variant="outline-primary" 
-              onClick={() => addArrayItem('collegeProgress')}
-              className="mt-2"
-            >
-              Add Progress Item
-            </Button>
-          )}
-        </div>
-
-        {/* Skills Sections */}
-        <div className="form-section">
-          <h4 className="section-title">Java Skills</h4>
-          {profileData.javaSkills.map((item, index) => (
-            <div key={index} className="array-item-group mb-2">
+            </Form.Group>
+            <Form.Group className='mb-3'>
+              <Form.Label>Header Title</Form.Label>
               <Form.Control
-                type="text"
-                value={item}
-                onChange={(e) => handleArrayChange(e, 'javaSkills', index)}
-                disabled={!isLoggedIn}
+                type='text'
+                name='headerTitle'
+                value={formData.headerTitle}
+                onChange={handleChange}
               />
-              {isLoggedIn && (
-                <Button 
-                  variant="outline-danger" 
-                  onClick={() => removeArrayItem('javaSkills', index)}
-                  className="ms-2"
-                >
-                  Remove
-                </Button>
-              )}
-            </div>
-          ))}
-          {isLoggedIn && (
-            <Button 
-              variant="outline-primary" 
-              onClick={() => addArrayItem('javaSkills')}
-              className="mt-2"
-            >
-              Add Java Skill
-            </Button>
-          )}
-        </div>
-
-        <div className="form-section">
-          <h4 className="section-title">SQL Skills</h4>
-          {profileData.sqlSkills.map((item, index) => (
-            <div key={index} className="array-item-group mb-2">
+            </Form.Group>
+            <Form.Group className='mb-3'>
+              <Form.Label>Header Subtitle</Form.Label>
               <Form.Control
-                type="text"
-                value={item}
-                onChange={(e) => handleArrayChange(e, 'sqlSkills', index)}
-                disabled={!isLoggedIn}
+                type='text'
+                name='headerSubtitle'
+                value={formData.headerSubtitle}
+                onChange={handleChange}
               />
-              {isLoggedIn && (
-                <Button 
-                  variant="outline-danger" 
-                  onClick={() => removeArrayItem('sqlSkills', index)}
-                  className="ms-2"
-                >
-                  Remove
-                </Button>
-              )}
-            </div>
-          ))}
-          {isLoggedIn && (
-            <Button 
-              variant="outline-primary" 
-              onClick={() => addArrayItem('sqlSkills')}
-              className="mt-2"
-            >
-              Add SQL Skill
-            </Button>
-          )}
-        </div>
-
-        {/* Project Section */}
-        <div className="form-section">
-          <h4 className="section-title">Project Information</h4>
-          <Form.Group className="mb-3">
-            <Form.Label>Project Title</Form.Label>
-            <Form.Control
-              type="text"
-              name="projectTitle"
-              value={profileData.projectTitle}
-              onChange={handleChange}
-              disabled={!isLoggedIn}
-            />
-          </Form.Group>
-
-          <Form.Group className="mb-3">
-            <Form.Label>Project Subtitle</Form.Label>
-            <Form.Control
-              type="text"
-              name="projectSubtitle"
-              value={profileData.projectSubtitle}
-              onChange={handleChange}
-              disabled={!isLoggedIn}
-            />
-          </Form.Group>
-
-          <Form.Group className="mb-3">
-            <Form.Label>Project Duration</Form.Label>
-            <Form.Control
-              type="text"
-              name="projectDuration"
-              value={profileData.projectDuration}
-              onChange={handleChange}
-              disabled={!isLoggedIn}
-            />
-          </Form.Group>
-
-          <Form.Group className="mb-3">
-            <Form.Label>Project Description</Form.Label>
-            <Form.Control
-              as="textarea"
-              rows={3}
-              name="projectDescription"
-              value={profileData.projectDescription}
-              onChange={handleChange}
-              disabled={!isLoggedIn}
-            />
-          </Form.Group>
-
-          <h5 className="mt-4">Project Details</h5>
-          {profileData.projectDetails.map((item, index) => (
-            <div key={index} className="array-item-group mb-2">
+            </Form.Group>
+            <Form.Group className='mb-3'>
+              <Form.Label>College Progress (one per line)</Form.Label>
               <Form.Control
-                as="textarea"
-                rows={2}
-                value={item}
-                onChange={(e) => handleArrayChange(e, 'projectDetails', index)}
-                disabled={!isLoggedIn}
+                as='textarea'
+                name='collegeProgress'
+                value={formData.collegeProgress}
+                onChange={handleChange}
+                rows={5}
               />
-              {isLoggedIn && (
-                <Button 
-                  variant="outline-danger" 
-                  onClick={() => removeArrayItem('projectDetails', index)}
-                  className="ms-2"
-                >
-                  Remove
-                </Button>
-              )}
-            </div>
-          ))}
-          {isLoggedIn && (
-            <Button 
-              variant="outline-primary" 
-              onClick={() => addArrayItem('projectDetails')}
-              className="mt-2"
-            >
-              Add Project Detail
-            </Button>
-          )}
-        </div>
-
-        {/* Footer Section */}
-        <div className="form-section">
-          <h4 className="section-title">Footer Text</h4>
-          <Form.Group className="mb-3">
-            <Form.Control
-              type="text"
-              name="footerText"
-              value={profileData.footerText}
-              onChange={handleChange}
-              disabled={!isLoggedIn}
-            />
-          </Form.Group>
-        </div>
-
-        {isLoggedIn && (
-          <div className="form-actions mt-4">
-            <Button variant="primary" type="submit" className="me-2">
-              Save Changes
-            </Button>
-            <Button variant="secondary" onClick={() => navigate('/')}>
-              Cancel
-            </Button>
-          </div>
-        )}
-      </Form>
+            </Form.Group>
+            <Form.Group className='mb-3'>
+              <Form.Label>Project Title</Form.Label>
+              <Form.Control
+                type='text'
+                name='projectTitle'
+                value={formData.projectTitle}
+                onChange={handleChange}
+              />
+            </Form.Group>
+            <Form.Group className='mb-3'>
+              <Form.Label>Project Subtitle</Form.Label>
+              <Form.Control
+                type='text'
+                name='projectSubtitle'
+                value={formData.projectSubtitle}
+                onChange={handleChange}
+              />
+            </Form.Group>
+            <Form.Group className='mb-3'>
+              <Form.Label>Project Duration</Form.Label>
+              <Form.Control
+                type='text'
+                name='projectDuration'
+                value={formData.projectDuration}
+                onChange={handleChange}
+              />
+            </Form.Group>
+            <Form.Group className='mb-3'>
+              <Form.Label>Project Description</Form.Label>
+              <Form.Control
+                as='textarea'
+                name='projectDescription'
+                value={formData.projectDescription}
+                onChange={handleChange}
+                rows={3}
+              />
+            </Form.Group>
+            <Form.Group className='mb-3'>
+              <Form.Label>Project Details (one per line)</Form.Label>
+              <Form.Control
+                as='textarea'
+                name='projectDetails'
+                value={formData.projectDetails}
+                onChange={handleChange}
+                rows={5}
+              />
+            </Form.Group>
+            <Button type='submit'>Save Changes</Button>
+          </Form>
+        </Col>
+      </Row>
     </Container>
   );
 }

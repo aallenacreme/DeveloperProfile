@@ -2,30 +2,40 @@ import { useState } from 'react';
 import { Modal, Form, Button } from 'react-bootstrap';
 import { useAuth } from '../auth';
 
-function LoginModal({ show, onHide }) {
+function SignupModal({ show, onHide }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [username, setUsername] = useState('');
   const [error, setError] = useState('');
-  const { login } = useAuth();
+  const { signup } = useAuth();
 
-  const handleLogin = async (e) => {
+  const handleSignup = async (e) => {
     e.preventDefault();
     try {
-      await login(email, password);
+      await signup(email, password, username);
       setError('');
       onHide();
     } catch (err) {
-      setError(err.message || 'Login failed');
+      setError(err.message || 'Signup failed');
     }
   };
 
   return (
     <Modal show={show} onHide={onHide} centered>
       <Modal.Header closeButton>
-        <Modal.Title>Login</Modal.Title>
+        <Modal.Title>Sign Up</Modal.Title>
       </Modal.Header>
       <Modal.Body>
-        <Form onSubmit={handleLogin}>
+        <Form onSubmit={handleSignup}>
+          <Form.Group className='mb-3'>
+            <Form.Label>Username</Form.Label>
+            <Form.Control
+              type='text'
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              required
+            />
+          </Form.Group>
           <Form.Group className='mb-3'>
             <Form.Label>Email</Form.Label>
             <Form.Control
@@ -45,11 +55,11 @@ function LoginModal({ show, onHide }) {
             />
           </Form.Group>
           {error && <p className='text-danger'>{error}</p>}
-          <Button type='submit'>Login</Button>
+          <Button type='submit'>Sign Up</Button>
         </Form>
       </Modal.Body>
     </Modal>
   );
 }
 
-export default LoginModal;
+export default SignupModal;
