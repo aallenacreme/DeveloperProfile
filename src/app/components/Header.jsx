@@ -15,7 +15,7 @@ function Header({ aboutSectionRef, profileData }) {
   const [lastScrollY, setLastScrollY] = useState(0);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showSignupModal, setShowSignupModal] = useState(false);
-  const [isNavExpanded, setIsNavExpanded] = useState(false); // New state for navbar collapse
+  const [isNavExpanded, setIsNavExpanded] = useState(false);
   const { isLoggedIn, logout } = useAuth();
 
   const ballRef = useRef(null);
@@ -27,7 +27,7 @@ function Header({ aboutSectionRef, profileData }) {
   const handleLogout = async () => {
     try {
       await logout();
-      setIsNavExpanded(false); // Collapse navbar on logout
+      setIsNavExpanded(false);
     } catch (err) {
       console.error("Logout failed:", err);
     }
@@ -59,11 +59,11 @@ function Header({ aboutSectionRef, profileData }) {
 
   const handleSetActive = (link) => {
     setActiveLink(link);
-    setIsNavExpanded(false); // Collapse navbar when a link is clicked
+    setIsNavExpanded(false);
   };
 
   const toggleNav = () => {
-    setIsNavExpanded(!isNavExpanded); // Toggle navbar collapse state
+    setIsNavExpanded(!isNavExpanded);
   };
 
   const splitName = (name) => {
@@ -125,7 +125,7 @@ function Header({ aboutSectionRef, profileData }) {
         className={`navbar-glass ${scrolled ? "scrolled" : ""} ${
           scrollingUp ? "scrolling-up" : ""
         }`}
-        expanded={isNavExpanded} // Control collapse state
+        expanded={isNavExpanded}
       >
         <Container className="nav-container">
           <Navbar.Brand className="gradient-brand">
@@ -134,7 +134,7 @@ function Header({ aboutSectionRef, profileData }) {
           <Navbar.Toggle
             aria-controls="basic-navbar-nav"
             className="custom-toggler"
-            onClick={toggleNav} // Toggle navbar on click
+            onClick={toggleNav}
           />
           <Navbar.Collapse
             id="basic-navbar-nav"
@@ -176,13 +176,12 @@ function Header({ aboutSectionRef, profileData }) {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="nav-link"
-                onClick={() => setIsNavExpanded(false)} // Collapse navbar on click
+                onClick={() => setIsNavExpanded(false)}
               >
                 <Button variant="outline-light" className="nav-button">
                   <span className="github-text">GitHub</span>
                 </Button>
               </a>
-
               {isLoggedIn && (
                 <Link
                   to="/edit-profile"
@@ -201,13 +200,31 @@ function Header({ aboutSectionRef, profileData }) {
                   </Button>
                 </Link>
               )}
+              {isLoggedIn && (
+                <Link
+                  to="/employee-management"
+                  className={`nav-link ${
+                    activeLink === "employee-management" ? "active" : ""
+                  }`}
+                  onClick={() => handleSetActive("employee-management")}
+                >
+                  <Button
+                    variant="outline-light"
+                    className={`nav-button ${
+                      activeLink === "employee-management" ? "active" : ""
+                    }`}
+                  >
+                    Employee Management
+                  </Button>
+                </Link>
+              )}
               {!isLoggedIn && (
                 <Button
                   variant="outline-light"
                   className="nav-button"
                   onClick={() => {
                     setShowSignupModal(true);
-                    setIsNavExpanded(false); // Collapse navbar on click
+                    setIsNavExpanded(false);
                   }}
                 >
                   Sign Up
@@ -221,7 +238,7 @@ function Header({ aboutSectionRef, profileData }) {
                     ? handleLogout
                     : () => {
                         setShowLoginModal(true);
-                        setIsNavExpanded(false); // Collapse navbar on click
+                        setIsNavExpanded(false);
                       }
                 }
               >

@@ -1,0 +1,36 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
+
+.cosmic-footer {
+  position: relative;
+  background: linear-gradient(145deg, #050510, #0e0f1f);
+  color: #dfe8ff;
+  font-family: 'Orbitron', sans-serif;
+  letter-spacing: 0.05em;
+  overflow: hidden;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.cosmic-footer .footer-links a {
+  color: #8ab4f8;
+  margin: 0 12px;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.cosmic-footer .footer-links a:hover {
+  color: #ffffff;
+  text-shadow: 0 0 5px #8ab4f8;
+}
+
+.footer-glow {
+  position: absolute;
+  top: -50px;
+  left: 50%;
+  width: 400px;
+  height: 200px;
+  transform: translateX(-50%);
+  background: radial-gradient(circle at center, rgba(138, 180, 248, 0.2), transparent 70%);
+  filter: blur(60px);
+  pointer-events: none;
+  z-index: 0;
+}

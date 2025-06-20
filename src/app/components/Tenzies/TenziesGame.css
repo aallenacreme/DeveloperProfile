@@ -1,6 +1,4 @@
-/* TENZIES-SCOPED STYLES (no global leaks) */
 
-/* Add this at the top of TenziesGame.css */
 .tenzies-backdrop {
   position: fixed;
   top: 0;
@@ -14,9 +12,9 @@
 
 .tenzies-game-container {
   position: fixed;
-  bottom: 20px;
+  top: 50%;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translate(-50%, -50%);
   width: 600px;
   height: 600px;
   background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
