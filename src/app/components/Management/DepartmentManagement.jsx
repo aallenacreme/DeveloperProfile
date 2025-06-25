@@ -12,7 +12,7 @@ import { supabase } from "../../services/supabaseClient";
 import { useAuth } from "../../auth";
 import { useNavigate } from "react-router-dom";
 import DepartmentFormModal from "./DepartmentFormModal";
-import "./EmployeeManagement.css";
+import "./employeeManagement.css";
 
 function DepartmentManagement() {
   const { user } = useAuth();
