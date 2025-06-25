@@ -12,7 +12,7 @@ import { supabase } from "../../services/supabaseClient";
 import { useAuth } from "../../auth";
 import { useNavigate } from "react-router-dom";
 import RoleFormModal from "./RoleFormModal";
-import "./employeeManagement.css";
+import "./Management.css";
 
 function RoleManagement() {
   const { user } = useAuth();
