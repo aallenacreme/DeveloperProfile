@@ -13,7 +13,7 @@ import { useAuth } from "../../auth";
 import { useNavigate } from "react-router-dom";
 import EmployeeFormModal from "./EmployeeFormModal";
 import viewEmployeeModal from "./viewEmployeeModal";
-import "./EmployeeManagement.css";
+import "./employeeManagement.css";
 
 function employeeManagement() {
   const { user } = useAuth();
