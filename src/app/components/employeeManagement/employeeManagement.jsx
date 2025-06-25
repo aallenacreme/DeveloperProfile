@@ -1,13 +1,10 @@
-// src/components/employeeManagement/EmployeeManagement.jsx
 import { useState, useEffect } from "react";
 import { Container, Table, Spinner, Alert, Button } from "react-bootstrap";
 import { supabase } from "../../services/supabaseClient";
 import { useAuth } from "../../auth";
 import { useNavigate } from "react-router-dom";
-
-import AddEmployeeModal from "./AddEmployeeModal";
+import EmployeeFormModal from "./EmployeeFormModal";
 import ViewEmployeeModal from "./ViewEmployeeModal";
-
 import "./EmployeeManagement.css";
 
 function EmployeeManagement() {
@@ -18,42 +15,27 @@ function EmployeeManagement() {
   const [roles, setRoles] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
-  // Modal states
   const [showProfileModal, setShowProfileModal] = useState(false);
-  const [selectedEmployee, setSelectedEmployee] = useState(null);
-
-  const [showAddModal, setShowAddModal] = useState(false);
+  const [modalConfig, setModalConfig] = useState({ show: false, mode: "add", employee: null });
+  const [sortConfig, setSortConfig] = useState({ key: "name", direction: "asc" });
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
+        const { data: deptData } = await supabase.from("departments").select("id, name");
+        setDepartments(deptData.reduce((acc, dept) => ({ ...acc, [dept.id]: dept.name }), {}));
 
-        // Fetch departments
-        const { data: deptData } = await supabase
-          .from("departments")
-          .select("id, name");
-        const deptMap = {};
-        deptData.forEach((dept) => (deptMap[dept.id] = dept.name));
-        setDepartments(deptMap);
+        const { data: roleData } = await supabase.from("roles").select("id, name");
+        setRoles(roleData.reduce((acc, role) => ({ ...acc, [role.id]: role.name }), {}));
 
-        // Fetch roles
-        const { data: roleData } = await supabase
-          .from("roles")
-          .select("id, name");
-        const roleMap = {};
-        roleData.forEach((role) => (roleMap[role.id] = role.name));
-        setRoles(roleMap);
-
-        // Fetch employees
         const { data: employeeData, error } = await supabase
           .from("employees")
           .select("*")
           .eq("created_by", user.id);
-
         if (error) throw error;
-        setEmployees(employeeData || []);
+
+        setEmployees([...(employeeData || [])].sort((a, b) => a.name.localeCompare(b.name)));
       } catch (err) {
         console.error("Error fetching data:", err);
         setError("Failed to load employee data");
@@ -61,7 +43,6 @@ function EmployeeManagement() {
         setLoading(false);
       }
     };
-
     if (user) fetchData();
   }, [user]);
 
@@ -71,47 +52,91 @@ function EmployeeManagement() {
     return new Date(dateString).toLocaleDateString(undefined, options);
   };
 
-  const handleBackToProfile = () => {
-    navigate("/");
+  const sortData = (key) => {
+    const direction = sortConfig.key === key && sortConfig.direction === "asc" ? "desc" : "asc";
+    setSortConfig({ key, direction });
+
+    const sorted = [...employees].sort((a, b) => {
+      if (key === "role_id") {
+        const aValue = roles[a[key]] || "N/A";
+        const bValue = roles[b[key]] || "N/A";
+        return direction === "asc" ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
+      }
+      if (key === "department_id") {
+        const aValue = departments[a[key]] || "N/A";
+        const bValue = departments[b[key]] || "N/A";
+        return direction === "asc" ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
+      }
+      if (key === "hire_date") {
+        const aDate = new Date(a[key] || 0);
+        const bDate = new Date(b[key] || 0);
+        return direction === "asc" ? aDate - bDate : bDate - aDate;
+      }
+      return direction === "asc"
+        ? (a[key] || "").localeCompare(b[key] || "")
+        : (b[key] || "").localeCompare(a[key] || "");
+    });
+    setEmployees(sorted);
   };
 
-  const handleViewProfile = (employee) => {
-    setSelectedEmployee(employee);
-    setShowProfileModal(true);
+  const getSortIndicator = (key) => {
+    if (sortConfig.key === key) {
+      return sortConfig.direction === "asc" ? " ↑" : " ↓";
+    }
+    return " ↕";
   };
 
-  const handleCloseProfileModal = () => {
-    setShowProfileModal(false);
-    setSelectedEmployee(null);
+  const handleAddOrUpdateEmployee = async (employeeData, isUpdate = false) => {
+    let data;
+    if (isUpdate) {
+      const { data: updatedData, error } = await supabase
+        .from("employees")
+        .update(employeeData)
+        .eq("id", modalConfig.employee.id)
+        .select();
+      if (error) throw error;
+      data = updatedData[0];
+      setEmployees((prev) =>
+        [...prev.filter((e) => e.id !== data.id), data].sort((a, b) =>
+          sortConfig.direction === "asc"
+            ? (a[sortConfig.key] || "").localeCompare(b[sortConfig.key] || "")
+            : (b[sortConfig.key] || "").localeCompare(a[sortConfig.key] || "")
+        )
+      );
+    } else {
+      const { data: newData, error } = await supabase
+        .from("employees")
+        .insert([{ ...employeeData, created_by: user.id }])
+        .select();
+      if (error) throw error;
+      data = newData[0];
+      setEmployees((prev) =>
+        [...prev, data].sort((a, b) =>
+          sortConfig.direction === "asc"
+            ? (a[sortConfig.key] || "").localeCompare(b[sortConfig.key] || "")
+            : (b[sortConfig.key] || "").localeCompare(a[sortConfig.key] || "")
+        )
+      );
+    }
+    setModalConfig({ show: false, mode: "add", employee: null });
+    return data;
   };
 
-  const handleShowAddModal = () => {
-    setShowAddModal(true);
-  };
-
-  const handleCloseAddModal = () => {
-    setShowAddModal(false);
-  };
-
-  const handleAddEmployee = async (newEmployeeData) => {
-    const { data, error } = await supabase
-      .from("employees")
-      .insert([newEmployeeData])
-      .select(); // <-- This ensures Supabase returns the inserted record(s)
-
-    if (error) throw error;
-
-    // Now `data` will contain the new employee
-    setEmployees((prev) => [...prev, data[0]]);
-    setShowAddModal(false);
+  const handleDeleteEmployee = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this employee?")) return;
+    try {
+      const { error } = await supabase.from("employees").delete().eq("id", id);
+      if (error) throw error;
+      setEmployees((prev) => prev.filter((employee) => employee.id !== id));
+    } catch (error) {
+      console.error("Error deleting employee:", error);
+      setError("Failed to delete employee");
+    }
   };
 
   if (loading) {
     return (
-      <Container
-        className="d-flex justify-content-center align-items-center"
-        style={{ minHeight: "50vh" }}
-      >
+      <Container className="d-flex justify-content-center align-items-center" style={{ minHeight: "50vh" }}>
         <Spinner animation="border" variant="primary" />
       </Container>
     );
@@ -120,9 +145,7 @@ function EmployeeManagement() {
   if (error) {
     return (
       <Container>
-        <Alert variant="danger" className="mt-4">
-          {error}
-        </Alert>
+        <Alert variant="danger" className="mt-4">{error}</Alert>
       </Container>
     );
   }
@@ -131,11 +154,7 @@ function EmployeeManagement() {
     <Container className="employee-management-container standalone-page">
       <div className="d-flex justify-content-between align-items-center mb-4">
         <div>
-          <Button
-            variant="outline-secondary"
-            onClick={handleBackToProfile}
-            className="me-2"
-          >
+          <Button variant="outline-secondary" onClick={() => navigate("/")} className="me-2">
             ← Back to Profile
           </Button>
           <h2 className="page-title">Employee Management</h2>
@@ -143,7 +162,7 @@ function EmployeeManagement() {
         <Button
           variant="primary"
           className="add-employee-btn"
-          onClick={handleShowAddModal}
+          onClick={() => setModalConfig({ show: true, mode: "add", employee: null })}
         >
           + Add Employee
         </Button>
@@ -153,7 +172,10 @@ function EmployeeManagement() {
         <div className="no-employees text-center py-5">
           <h4>No employees found</h4>
           <p>Get started by adding your first employee</p>
-          <Button variant="outline-primary" onClick={handleShowAddModal}>
+          <Button
+            variant="outline-primary"
+            onClick={() => setModalConfig({ show: true, mode: "add", employee: null })}
+          >
             Add Employee
           </Button>
         </div>
@@ -162,12 +184,24 @@ function EmployeeManagement() {
           <Table striped bordered hover responsive className="employee-table">
             <thead>
               <tr>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Role</th>
-                <th>Department</th>
-                <th>Hire Date</th>
-                <th>Status</th>
+                <th onClick={() => sortData("name")} style={{ cursor: "pointer" }}>
+                  Name {getSortIndicator("name")}
+                </th>
+                <th onClick={() => sortData("email")} style={{ cursor: "pointer" }}>
+                  Email {getSortIndicator("email")}
+                </th>
+                <th onClick={() => sortData("role_id")} style={{ cursor: "pointer" }}>
+                  Role {getSortIndicator("role_id")}
+                </th>
+                <th onClick={() => sortData("department_id")} style={{ cursor: "pointer" }}>
+                  Department {getSortIndicator("department_id")}
+                </th>
+                <th onClick={() => sortData("hire_date")} style={{ cursor: "pointer" }}>
+                  Hire Date {getSortIndicator("hire_date")}
+                </th>
+                <th onClick={() => sortData("status")} style={{ cursor: "pointer" }}>
+                  Status {getSortIndicator("status")}
+                </th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -188,9 +222,25 @@ function EmployeeManagement() {
                     <Button
                       variant="info"
                       size="sm"
-                      onClick={() => handleViewProfile(employee)}
+                      onClick={() => setShowProfileModal(true) || setModalConfig({ ...modalConfig, employee })}
+                      className="me-1"
                     >
                       View
+                    </Button>
+                    <Button
+                      variant="warning"
+                      size="sm"
+                      onClick={() => setModalConfig({ show: true, mode: "edit", employee })}
+                      className="me-1"
+                    >
+                      Edit
+                    </Button>
+                    <Button
+                      variant="danger"
+                      size="sm"
+                      onClick={() => handleDeleteEmployee(employee.id)}
+                    >
+                      Delete
                     </Button>
                   </td>
                 </tr>
@@ -200,21 +250,19 @@ function EmployeeManagement() {
         </div>
       )}
 
-      {/* Add Employee Modal */}
-      <AddEmployeeModal
-        show={showAddModal}
-        onClose={handleCloseAddModal}
-        onAdd={handleAddEmployee}
+      <EmployeeFormModal
+        show={modalConfig.show}
+        mode={modalConfig.mode}
+        employee={modalConfig.employee}
+        onClose={() => setModalConfig({ show: false, mode: "add", employee: null })}
+        onSubmit={handleAddOrUpdateEmployee}
         roles={roles}
         departments={departments}
-        userId={user.id}
       />
-
-      {/* View Employee Modal */}
       <ViewEmployeeModal
         show={showProfileModal}
-        onClose={handleCloseProfileModal}
-        employee={selectedEmployee}
+        onClose={() => setShowProfileModal(false) || setModalConfig({ ...modalConfig, employee: null })}
+        employee={modalConfig.employee}
         roles={roles}
         departments={departments}
         formatDate={formatDate}
