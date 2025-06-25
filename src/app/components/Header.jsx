@@ -7,6 +7,8 @@ import LoginModal from "./LoginModal";
 import SignupModal from "./SignupModal";
 import StarField from "./Starfield";
 import "./Header.css";
+import resume from "../assets/images/resume.svg";
+import git from "../assets/images/git.svg";
 
 function Header({ aboutSectionRef, profileData }) {
   const [scrolled, setScrolled] = useState(false);
@@ -23,6 +25,8 @@ function Header({ aboutSectionRef, profileData }) {
   const firstNameRef = useRef(null);
   const lastNameRef = useRef(null);
   const subtitleRef = useRef(null);
+  // prettier-ignore
+  const resumeDocumentFileUrl= "https://iwikoypoupxvpiortcci.supabase.co/storage/v1/object/sign/devprofilebucket/Resume.pdf?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8xYzQ2ZGY3Mi1hZGM1LTQ1MTgtYWNiZC1mZmEwNTczZDliNjEiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJkZXZwcm9maWxlYnVja2V0L1Jlc3VtZS5wZGYiLCJpYXQiOjE3NTA0NTI5NjgsImV4cCI6MTc4MTk4ODk2OH0.RfXsrXOTqcYtsPNOUqIRA2i1IKAdPo14UuxGsRyJPRY";
 
   const handleLogout = async () => {
     try {
@@ -116,6 +120,26 @@ function Header({ aboutSectionRef, profileData }) {
           <p className="subtitle" ref={subtitleRef}>
             {profileData.headerSubtitle}
           </p>
+          <div className="social-links">
+            <a
+              href={resumeDocumentFileUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="resume-link"
+            >
+              <img src={resume} alt="Resume" className="resume-icon" />
+              <span className="tooltip-text">Resume</span>
+            </a>
+
+            <a
+              href="https://github.com/your-username" // Replace with your GitHub profile
+              target="_blank"
+              rel="noopener noreferrer"
+              className="github-link"
+            >
+              <img src={git} alt="GitHub" className="github-icon" />
+            </a>
+          </div>
         </div>
       </div>
 

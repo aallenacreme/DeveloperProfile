@@ -5,25 +5,24 @@
   left: 0;
   width: 100%;
   height: 100%;
-  z-index: 1; /* Behind title and RainbowBall */
-  pointer-events: none; /* Prevent interaction with canvas */
+  z-index: 1;
+  pointer-events: none;
 }
 
+/* Hero section styles */
 .hero-section {
-  background: linear-gradient(135deg, #0e0566, #302b63, #9999ff); /* Dark gradient background */
-  height: 100vh; /* Full viewport height */
-  min-height: 600px; /* Minimum height for smaller screens */
-  width: 100%; /* Full width */
-  margin: 0;
-  padding: 0;
+  background: linear-gradient(135deg, #0e0566, #302b63, #9999ff);
+  height: 100vh;
+  min-height: 600px;
+  width: 100%;
   display: flex;
   flex-direction: column;
-  justify-content: center; /* Center content vertically */
-  align-items: center; /* Center content horizontally */
+  justify-content: center;
+  align-items: center;
   text-align: center;
   position: relative;
-  overflow: hidden; /* Hide overflow content */
-  color: white; /* White text color */
+  overflow: hidden;
+  color: white;
 }
 
 .hero-section::after {
@@ -32,51 +31,53 @@
   bottom: 0;
   left: 0;
   width: 100%;
-  height: 100px; /* height of blend effect */
-  background: linear-gradient(to bottom, rgba(14, 5, 102, 0) 0%, rgba(14, 5, 102, 1) 100%);
+  height: 100px;
+  background: linear-gradient(
+    to bottom,
+    rgba(14, 5, 102, 0) 0%,
+    rgba(14, 5, 102, 1) 100%
+  );
   pointer-events: none;
   z-index: 2;
 }
 
-
-/* Container for the name and subtitle, centered vertically */
+/* Title container styles */
 .title-container {
   position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-  z-index: 2; /* Above star field */
+  z-index: 2;
 }
 
-/* Container for the name, ensures no wrapping */
+/* Name container */
 .name-container {
   position: relative;
   display: flex;
   justify-content: center;
-  white-space: pre; /* Prevent name from breaking into multiple lines */
-  font-size: 3.5rem; /* Large font size for name */
+  white-space: pre;
+  font-size: 3.5rem;
   font-weight: bold;
   margin-bottom: 1rem;
 }
 
-/* Styles for the first and last name parts, enabling animation */
-.first-name, .last-name {
+/* Letter animations */
+.first-name,
+.last-name {
   display: inline-block;
-  will-change: transform; /* Optimize for transform animations */
+  will-change: transform;
 }
 
-/* Styles for individual letters, enabling scaling animations */
 .letter {
   display: inline-block;
-  transform-origin: center bottom; /* Scale from bottom center */
-  will-change: transform; /* Optimize for transform animations */
+  transform-origin: center bottom;
+  will-change: transform;
 }
 
-/* Styles for the subtitle ("Software Developer") */
+/* Subtitle style */
 .subtitle {
-  font-size: 1.5rem; /* Smaller font size for subtitle */
-  font-weight: 300; /* Lighter font weight */
-  will-change: transform, color, scale; /* Optimize for animations */
+  font-size: 1.5rem;
+  font-weight: 300;
   margin-top: 1rem;
   text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
   transition: all 0.3s ease;
@@ -85,60 +86,21 @@
   perspective: 1000px;
 }
 
-/* Styles for the rainbow ball SVG */
+/* Canvas ball */
 .ball {
   width: 50px;
   height: 50px;
   position: absolute;
   top: 0;
   left: 0;
-  opacity: 0; /* Initially hidden */
-  z-index: 50; /* Ensure ball is above other elements */
-  will-change: transform; /* Optimize for transform animations */
+  opacity: 0;
+  z-index: 50;
+  will-change: transform;
 }
 
-/* Border style for the navbar */
-.navbar-border {
-  border-bottom: 2px solid #fff; /* White border at the bottom */
-}
-
-/* Particle styles */
-.particle {
-  position: absolute;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  pointer-events: none;
-  z-index: 20;
-}
-
-/* Letter particle styles */
-.letter-particle {
-  position: absolute;
-  z-index: 10;
-}
-
-/* Explosion particle styles */
-.explosion-particle {
-  position: absolute;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  pointer-events: none;
-  z-index: 100;
-  will-change: transform, opacity;
-}
-
-/* For the shattering text effect */
-.char {
-  display: inline-block;
-  position: relative;
-  will-change: transform, opacity;
-}
-
-/* Glassmorphism navbar with gradient effects */
+/* Navbar glass effect */
 .navbar-glass {
-  background: rgba(20, 15, 70, 0); /* Fully transparent when not scrolled */
+  background: rgba(20, 15, 70, 0);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid rgba(255, 255, 255, 0);
   box-shadow: none;
@@ -149,26 +111,24 @@
   right: 0;
   z-index: 1000;
   transition: all 0.4s ease;
-  opacity: 0; /* Fully transparent when not scrolled */
+  opacity: 0;
 }
-
 .navbar-glass.scrolled {
-  background: rgba(10, 5, 40, 0.85); /* Visible when scrolled down */
+  background: rgba(10, 5, 40, 0.85);
   backdrop-filter: blur(15px);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  opacity: 1; /* Fully visible when scrolled down */
+  opacity: 1;
 }
-
 .navbar-glass.scrolling-up {
-  background: rgba(20, 15, 70, 0.4); /* Semi-transparent when scrolling up */
+  background: rgba(20, 15, 70, 0.4);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-  opacity: 0.4; /* Slightly visible when scrolling up */
+  opacity: 0.4;
 }
 
-/* Gradient text for brand */
+/* Gradient brand text */
 .gradient-brand {
   background: linear-gradient(45deg, #ff00cc, #00ccff, #00ff99);
   -webkit-background-clip: text;
@@ -181,32 +141,27 @@
   transition: all 0.3s ease;
 }
 
-/* Navbar toggle button */
+/* Navbar toggle */
 .custom-toggler {
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 8px;
   padding: 0.25rem 0.5rem;
 }
-
 .custom-toggler .navbar-toggler-icon {
-  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(255, 255, 255, 0.8)' stroke-width='2' stroke-linecap='round' stroke-miterlimit='10' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+  background-image: url("data:image/svg+xml,…");
 }
 
-/* Nav container */
+/* Nav buttons */
 .nav-container {
   max-width: 1400px;
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
-
-/* Nav buttons container */
 .nav-buttons {
   display: flex;
   gap: 0.8rem;
 }
-
-/* Nav button styles */
 .nav-button {
   background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.2);
@@ -220,11 +175,10 @@
   gap: 0.5rem;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 0 15px rgba(0, 204, 255, 0.3); /* Add aura to all buttons */
+  box-shadow: 0 0 15px rgba(0, 204, 255, 0.3);
 }
-
 .nav-button::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
@@ -235,67 +189,153 @@
   transition: opacity 0.3s ease;
   z-index: -1;
 }
-
 .nav-button:hover {
   transform: translateY(-3px);
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
   color: white;
   border-color: transparent;
 }
-
 .nav-button:hover::before {
   opacity: 0.3;
 }
-
-/* Active link styles */
 .nav-button.active,
 .nav-link.active .nav-button {
   background: rgba(255, 255, 255, 0.15);
   border: 1px solid rgba(255, 255, 255, 0.3);
   box-shadow: 0 0 15px rgba(0, 204, 255, 0.3);
-  color: white; /* Ensure active button text is white */
+  color: white;
 }
 
-/* GitHub icon styling */
-.github-icon {
-  width: 20px;
-  height: 20px;
+/* Social icons container */
+.social-links {
+  display: flex;
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+  align-items: center;
+  z-index: 2;
+}
+
+/* Resume & GitHub icon links */
+.resume-link,
+.github-link {
   display: flex;
   align-items: center;
   justify-content: center;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 15px rgba(0, 204, 255, 0.3);
+  position: relative;
+  overflow: visible;
+}
+.resume-link::before,
+.github-link::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(45deg, #ff00cc, #00ccff, #00ff99);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: -1;
+  border-radius: 50%;
+}
+.resume-link:hover,
+.github-link:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  border-color: transparent;
+}
+.resume-link:hover::before,
+.github-link:hover::before {
+  opacity: 0.3;
+}
+.resume-link:hover .resume-icon,
+.github-link:hover .github-icon {
+  filter: brightness(1.5);
+}
+.resume-icon,
+.github-icon {
+  width: 24px;
+  height: 24px;
+  transition: filter 0.3s ease;
 }
 
-.github-text {
-  display: inline-block;
-  margin-right: 0.5rem;
+/* Tooltip styles */
+.tooltip-text {
+  visibility: hidden;
+  opacity: 0;
+  background: linear-gradient(135deg, #0e0566, #302b63, #9999ff);
+  color: #c1eaff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 4px 8px;
+  position: absolute;
+  bottom: -35px;
+  left: 50%;
+  transform: translateX(-50%) translateY(10px); /* Start slightly lower */
+  transition: opacity 0.5s ease, transform 0.5s ease;
+  font-size: 0.75rem;
+  white-space: nowrap;
+  z-index: 10;
+  box-shadow: 0 4px 15px rgba(0, 255, 255, 0.2); /* Soft glow */
 }
 
-/* Responsive adjustments */
+@keyframes pulse-glow {
+  0%,
+  100% {
+    box-shadow: 0 4px 15px rgba(0, 255, 255, 0.2);
+  }
+  50% {
+    box-shadow: 0 4px 25px rgba(0, 255, 255, 0.5);
+  }
+}
+
+.resume-link:hover .tooltip-text,
+.github-link:hover .tooltip-text {
+  visibility: visible;
+  opacity: 1;
+  transform: translateX(-50%) translateY(0); /* Float up */
+  animation: pulse-glow 1.5s ease-in-out infinite;
+}
+
+/* Mobile responsive */
 @media (max-width: 992px) {
   .nav-buttons {
-    padding-top: 1rem;
     flex-direction: column;
     align-items: flex-start;
     gap: 0.5rem;
+    padding-top: 1rem;
   }
-  
   .nav-button {
     width: 100%;
     justify-content: center;
   }
-  
   .github-text {
     display: inline-block;
   }
 }
-
 @media (max-width: 576px) {
   .gradient-brand {
     font-size: 1.4rem;
   }
-  
   .nav-button {
     padding: 0.5rem 1rem;
     font-size: 0.9rem;
+  }
+  .resume-link,
+  .github-link {
+    width: 36px;
+    height: 36px;
+  }
+  .resume-icon,
+  .github-icon {
+    width: 20px;
+    height: 20px;
   }
 }

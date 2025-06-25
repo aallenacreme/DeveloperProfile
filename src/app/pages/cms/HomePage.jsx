@@ -1,3 +1,4 @@
+// src/pages/cms/HomePage.js
 import { useState, useEffect, useRef } from "react";
 import { Routes, Route } from "react-router-dom";
 import { Container } from "react-bootstrap";
@@ -5,7 +6,6 @@ import Header from "../../components/Header";
 import MainContent from "../../components/MainContent";
 import Footer from "../../components/Footer";
 import EditProfile from "../../components/EditProfile";
-import EmployeeManagement from "../../components/employeeManagement/employeeManagement";
 import { supabase } from "../../services/supabaseClient";
 import { useAuth } from "../../auth";
 
@@ -79,10 +79,6 @@ function HomePage() {
               setProfileData={setProfileData}
             />
           }
-        />
-        <Route
-          path="/employee-management"
-          element={<EmployeeManagement />}
         />
       </Routes>
       <Footer profileData={profileData} />
