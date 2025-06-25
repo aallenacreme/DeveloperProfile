@@ -3,10 +3,10 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./auth";
 import TenziesGame from "./components/Tenzies/TenziesGame";
 import HomePage from "./pages/cms/HomePage";
-import HomepageManagement from "./components/employeeManagement/HomepageManagement";
-import EmployeeManagement from "./components/employeeManagement/employeeManagement";
-import DepartmentManagement from "./components/employeeManagement/DepartmentManagement";
-import RoleManagement from "./components/employeeManagement/RoleManagement";
+import HomepageManagement from "./components/Management/HomepageManagement";
+import employeeManagement from "./components/Management/employeeManagement";
+import DepartmentManagement from "./components/Management/DepartmentManagement";
+import RoleManagement from "./components/Management/RoleManagement";
 import "./assets/custom/app.css";
 import "./auth";
 

@@ -13,7 +13,7 @@ import { useAuth } from "../../auth";
 import { Link, useNavigate } from "react-router-dom";
 import "./homepage.css";
 
-function HomePage() {
+function HomepageManagement() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [username, setUsername] = useState("User");
@@ -159,4 +159,4 @@ function HomePage() {
   );
 }
 
-export default HomePage;
+export default HomepageManagement;
