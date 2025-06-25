@@ -226,19 +226,19 @@ function Header({ aboutSectionRef, profileData }) {
               )}
               {isLoggedIn && (
                 <Link
-                  to="/employee-management"
+                  to="/homepage-management"
                   className={`nav-link ${
-                    activeLink === "employee-management" ? "active" : ""
+                    activeLink === "homepage-management" ? "active" : ""
                   }`}
-                  onClick={() => handleSetActive("employee-management")}
+                  onClick={() => handleSetActive("homepage-management")}
                 >
                   <Button
                     variant="outline-light"
                     className={`nav-button ${
-                      activeLink === "employee-management" ? "active" : ""
+                      activeLink === "homepage-management" ? "active" : ""
                     }`}
                   >
-                    Employee Management
+                    Homepage Management
                   </Button>
                 </Link>
               )}

@@ -1,12 +1,4 @@
-/* src/components/employeeManagement/EmployeeManagement.css */
-
-/* Standalone Page Styling */
-.standalone-page {
-  padding: 2rem;
-  min-height: 100vh;
-  background-color: #f8f9fa;
-}
-
+/* Employee Management Container */
 .employee-management-container {
   max-width: 1200px;
   margin: 0 auto;
@@ -14,49 +6,6 @@
   border-radius: 8px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
   padding: 2rem;
-}
-
-/* Header Section */
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid #eaeaea;
-}
-
-.page-title {
-  font-weight: 600;
-  color: #2c3e50;
-  margin: 0;
-  font-size: 1.75rem;
-}
-
-/* Button Styles */
-.add-employee-btn {
-  font-weight: 500;
-  padding: 0.5rem 1.25rem;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease;
-  border: none;
-  border-radius: 6px;
-}
-
-.add-employee-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-}
-
-.back-btn {
-  margin-right: 1rem;
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
-  transition: all 0.2s ease;
-}
-
-.back-btn:hover {
-  background-color: #f1f1f1;
 }
 
 /* Table Container */
@@ -130,6 +79,29 @@
   color: #c62828;
 }
 
+/* Search Input Styles */
+.search-input {
+  max-width: 400px;
+  margin-bottom: 1.5rem;
+}
+
+.search-input .form-control {
+  border-radius: 6px;
+  border: 1px solid #ced4da;
+  padding: 0.5rem 1rem;
+  font-size: 0.95rem;
+}
+
+.search-input .btn-outline-secondary {
+  border-radius: 0 6px 6px 0;
+  padding: 0.5rem 1rem;
+}
+
+.search-input .form-control:focus {
+  border-color: #3498db;
+  box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+}
+
 /* Empty State */
 .no-employees {
   background-color: #f8f9fa;
@@ -157,12 +129,6 @@
     padding: 1rem;
   }
 
-  .page-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 1rem;
-  }
-
   .employee-table thead th,
   .employee-table tbody td {
     padding: 0.75rem;
@@ -173,9 +139,13 @@
     padding: 0.25rem 0.5rem;
     font-size: 0.75rem;
   }
+
+  .search-input {
+    max-width: 100%;
+  }
 }
 
-/* Animation for Loading */
+/* Animation for Table Rows */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -204,4 +174,3 @@
 .employee-table tbody tr:nth-child(4) {
   animation-delay: 0.4s;
 }
-/* Continue with more delays if needed */

@@ -121,7 +121,9 @@ export default function EmployeeFormModal({
       setFormError(null);
       onClose();
     } catch (_error) {
-      setFormError(`Failed to ${isEdit ? "update" : "add"} employee. Please try again.`);
+      setFormError(
+        `Failed to ${isEdit ? "update" : "add"} employee. Please try again.`
+      );
     } finally {
       setFormLoading(false);
     }
@@ -130,7 +132,9 @@ export default function EmployeeFormModal({
   return (
     <Modal show={show} onHide={onClose} size="lg" backdrop="static">
       <Modal.Header closeButton>
-        <Modal.Title>{isEdit ? "Edit Employee" : "Add New Employee"}</Modal.Title>
+        <Modal.Title>
+          {isEdit ? "Edit Employee" : "Add New Employee"}
+        </Modal.Title>
       </Modal.Header>
       <Modal.Body>
         {formError && <Alert variant="danger">{formError}</Alert>}
@@ -297,7 +301,13 @@ export default function EmployeeFormModal({
               Cancel
             </Button>
             <Button type="submit" variant="primary" disabled={formLoading}>
-              {formLoading ? (isEdit ? "Updating..." : "Adding...") : isEdit ? "Update Employee" : "Add Employee"}
+              {formLoading
+                ? isEdit
+                  ? "Updating..."
+                  : "Adding..."
+                : isEdit
+                ? "Update Employee"
+                : "Add Employee"}
             </Button>
           </div>
         </Form>
