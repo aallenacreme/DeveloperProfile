@@ -12,10 +12,10 @@ import { supabase } from "../../services/supabaseClient";
 import { useAuth } from "../../auth";
 import { useNavigate } from "react-router-dom";
 import EmployeeFormModal from "./EmployeeFormModal";
-import viewEmployeeModal from "./viewEmployeeModal";
+import ViewEmployeeModal from "./viewEmployeeModal";
 import "./employeeManagement.css";
 
-function employeeManagement() {
+function EmployeeManagement() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [employees, setEmployees] = useState([]);
@@ -413,4 +413,4 @@ function employeeManagement() {
   );
 }
 
-export default employeeManagement;
+export default EmployeeManagement;

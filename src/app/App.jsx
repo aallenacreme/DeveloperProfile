@@ -4,7 +4,7 @@ import { AuthProvider } from "./auth";
 import TenziesGame from "./components/Tenzies/TenziesGame";
 import HomePage from "./pages/cms/HomePage";
 import HomepageManagement from "./components/Management/HomepageManagement";
-import employeeManagement from "./components/Management/employeeManagement";
+import EmployeeManagement from "./components/Management/EmployeeManagement";
 import DepartmentManagement from "./components/Management/DepartmentManagement";
 import RoleManagement from "./components/Management/RoleManagement";
 import "./assets/custom/app.css";
@@ -18,7 +18,7 @@ function App() {
           <Route path="/*" element={<HomePage />} />
           <Route path="/tenzies" element={<TenziesGame />} />
           <Route path="/homepage-management" element={<HomepageManagement />} />
-          <Route path="/employees" element={<employeeManagement />} />
+          <Route path="/employees" element={<EmployeeManagement />} />
           <Route path="/departments" element={<DepartmentManagement />} />
           <Route path="/roles" element={<RoleManagement />} />
         </Routes>
