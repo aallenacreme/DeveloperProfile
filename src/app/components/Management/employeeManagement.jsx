@@ -15,7 +15,7 @@ import EmployeeFormModal from "./EmployeeFormModal";
 import viewEmployeeModal from "./viewEmployeeModal";
 import "./EmployeeManagement.css";
 
-function EmployeeManagement() {
+function employeeManagement() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [employees, setEmployees] = useState([]);
@@ -413,4 +413,4 @@ function EmployeeManagement() {
   );
 }
 
-export default EmployeeManagement;
+export default employeeManagement;
