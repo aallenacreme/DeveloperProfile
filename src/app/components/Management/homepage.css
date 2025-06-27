@@ -1,219 +1,225 @@
-/* General Reset and Base Styles */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-.homepage-container {
-  min-height: 100vh;
-  background: linear-gradient(135deg, #f0f4f8 0%, #e0e7ff 100%);
-  padding: 3rem 1rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-/* Header Section */
-.header-section {
-  position: relative;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+/* Employee Management Container */
+.employee-management-container {
   max-width: 1200px;
-  width: 100%;
-  padding: 2rem 2rem 1.5rem;
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-  margin-bottom: 2rem;
-  animation: slideIn 0.5s ease-out;
+  margin: 0 auto;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  padding: 2rem;
 }
 
-.header-content {
+/* Table Container */
+.employee-table-container {
+  border-radius: 8px;
+  overflow-x: auto; /* Enable horizontal scrolling on mobile */
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  margin-top: 1.5rem;
+  border: 1px solid #eaeaea;
+}
+
+/* Table Styles */
+.employee-table {
+  margin-bottom: 0;
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  min-width: 600px; /* Ensure table is wide enough for content */
+}
+
+.employee-table thead th {
+  background-color: #3498db;
+  color: white;
+  font-weight: 600;
+  border: none;
+  padding: 0.75rem 1rem; /* Reduced padding for better fit */
+  text-align: left;
+  font-size: 0.95rem; /* Smaller font size */
+  white-space: nowrap; /* Prevent text and arrow wrapping */
+  position: relative; /* For sorting arrow positioning */
+}
+
+.employee-table thead th:first-child {
+  border-top-left-radius: 8px;
+}
+
+.employee-table thead th:last-child {
+  border-top-right-radius: 8px;
+}
+
+/* Sorting Arrow Styling */
+.employee-table thead th::after {
+  content: attr(
+    data-sort-indicator
+  ); /* Use data attribute for sort indicator */
+  margin-left: 0.25rem; /* Space between text and arrow */
+  font-size: 0.85rem; /* Smaller arrow size */
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.employee-table tbody td {
+  padding: 0.75rem 1rem; /* Reduced padding */
+  vertical-align: middle;
+  border-top: 1px solid #eaeaea;
+  font-size: 0.9rem; /* Smaller font for table cells */
+}
+
+.employee-table tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+/* Status Badges */
+.status-badge {
+  padding: 0.35rem 0.85rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-transform: capitalize;
+  display: inline-block;
+  min-width: 80px;
   text-align: center;
 }
 
-.page-title {
-  font-size: 2.5rem;
-  font-weight: 700;
-  color: #1a3c6d;
-  margin-bottom: 0.5rem;
-  font-family: "Inter", sans-serif;
+.status-badge.active {
+  background-color: #e8f5e9;
+  color: #2e7d32;
 }
 
-.page-subtitle {
-  font-size: 1.1rem;
-  color: #6b7280;
-  font-weight: 400;
+.status-badge.inactive {
+  background-color: #fff3e0;
+  color: #ef6c00;
 }
 
-.back-btn {
-  position: absolute;
-  top: 1rem;
-  left: 1rem;
-  padding: 0.5rem 1.25rem;
-  font-size: 0.9rem;
-  font-weight: 500;
-  border-radius: 8px;
-  border: 2px solid #e5e7eb;
-  background: #ffffff;
-  color: #374151;
-  transition: all 0.3s ease;
+.status-badge.terminated {
+  background-color: #ffebee;
+  color: #c62828;
 }
 
-.back-btn:hover {
-  background: #e5e7eb;
-  border-color: #d1d5db;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-}
-
-/* Card Styles */
-.homepage-card {
-  background: #ffffff;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  min-height: 280px; /* Fixed height for consistency */
-  display: flex;
-  flex-direction: column;
-  animation: fadeInUp 0.5s ease-out;
-}
-
-.homepage-card:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
-}
-
-.card-icon {
-  font-size: 2rem;
-  position: absolute;
-  top: 1rem;
-  right: 1rem;
-  opacity: 0.2;
-}
-
-.homepage-card .card-body {
-  padding: 2rem;
-  display: flex;
-  flex-direction: column;
-  flex-grow: 1;
-  justify-content: space-between;
-}
-
-.homepage-card .card-title {
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: #1a3c6d;
-  margin-bottom: 1rem;
-}
-
-.homepage-card .card-text {
-  font-size: 1rem;
-  color: #4b5563;
+/* Search Input Styles */
+.search-input {
+  max-width: 400px;
   margin-bottom: 1.5rem;
-  flex-grow: 1;
 }
 
-.card-btn {
-  background: #2563eb;
-  border: none;
-  padding: 0.75rem 1.5rem;
+.search-input .form-control {
+  border-radius: 6px;
+  border: 1px solid #ced4da;
+  padding: 0.5rem 1rem;
   font-size: 0.95rem;
-  font-weight: 500;
-  border-radius: 8px;
-  transition: all 0.3s ease;
-  align-self: flex-start;
-  min-width: 200px; /* Ensures consistent width */
-  text-align: center; /* Centers text for uniformity */
-}
-.card-btn:hover {
-  background: #1d4ed8;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
 }
 
-/* Animations */
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateY(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.search-input .btn-outline-secondary {
+  border-radius: 0 6px 6px 0;
+  padding: 0.5rem 1rem;
 }
 
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.search-input .form-control:focus {
+  border-color: #3498db;
+  box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
 }
 
-/* Responsive Design */
+/* Empty State */
+.no-employees {
+  background-color: #f8f9fa;
+  border-radius: 10px;
+  padding: 3rem;
+  margin-top: 2rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  text-align: center;
+}
+
+.no-employees h4 {
+  color: #2c3e50;
+  margin-bottom: 0.5rem;
+  font-size: 1.25rem;
+}
+
+.no-employees p {
+  color: #7f8c8d;
+  margin-bottom: 1.5rem;
+}
+
+/* Responsive Adjustments */
 @media (max-width: 768px) {
-  .header-section {
-    padding: 2.5rem 1rem 1.5rem;
+  .employee-management-container {
+    padding: 1rem;
   }
 
-  .page-title {
-    font-size: 2rem;
+  .employee-table-container {
+    overflow-x: auto; /* Ensure horizontal scroll */
   }
 
-  .page-subtitle {
-    font-size: 1rem;
+  .employee-table thead th,
+  .employee-table tbody td {
+    padding: 0.5rem 0.75rem; /* Further reduced padding */
+    font-size: 0.85rem; /* Smaller font size */
   }
 
-  .homepage-card {
-    min-height: 260px;
-    margin-bottom: 1.5rem;
+  .employee-table thead th::after {
+    font-size: 0.75rem; /* Even smaller arrow */
   }
 
-  .homepage-card .card-body {
-    padding: 1.5rem;
+  .status-badge {
+    min-width: 60px;
+    padding: 0.2rem 0.4rem;
+    font-size: 0.7rem;
   }
 
-  .card-icon {
-    font-size: 1.5rem;
-  }
-
-  .back-btn {
-    top: 0.75rem;
-    left: 0.75rem;
-    padding: 0.5rem 1rem;
+  .search-input {
+    max-width: 100%;
   }
 }
 
+/* Extra Small Devices (Phones, <576px) */
 @media (max-width: 576px) {
-  .page-title {
-    font-size: 1.75rem;
+  .employee-table thead th,
+  .employee-table tbody td {
+    padding: 0.4rem 0.6rem;
+    font-size: 0.8rem;
   }
 
-  .card-btn {
-    width: 100%;
-    text-align: center;
+  .employee-table thead th::after {
+    font-size: 0.7rem;
   }
 
-  .homepage-card {
-    min-height: 240px;
+  .status-badge {
+    min-width: 50px;
+    font-size: 0.65rem;
   }
 
-  .back-btn {
-    font-size: 0.85rem;
+  /* Ensure buttons in Actions column are compact */
+  .employee-table tbody td button {
+    padding: 0.3rem 0.5rem;
+    font-size: 0.75rem;
   }
 }
 
-/* Alert Styling */
-.alert {
-  border-radius: 8px;
-  max-width: 600px;
-  margin: 0 auto 1.5rem;
+/* Animation for Table Rows */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.employee-table tbody tr {
+  animation: fadeIn 0.3s ease forwards;
+  opacity: 0;
+}
+
+.employee-table tbody tr:nth-child(1) {
+  animation-delay: 0.1s;
+}
+.employee-table tbody tr:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.employee-table tbody tr:nth-child(3) {
+  animation-delay: 0.3s;
+}
+.employee-table tbody tr:nth-child(4) {
+  animation-delay: 0.4s;
 }

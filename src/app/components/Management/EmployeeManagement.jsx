@@ -19,7 +19,7 @@ function EmployeeManagement() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [employees, setEmployees] = useState([]);
-  const [filteredEmployees, setFilteredEmployees] = useState([]); // New state for filtered data
+  const [filteredEmployees, setFilteredEmployees] = useState([]);
   const [departments, setDepartments] = useState({});
   const [roles, setRoles] = useState({});
   const [loading, setLoading] = useState(true);
@@ -34,7 +34,7 @@ function EmployeeManagement() {
     key: "name",
     direction: "asc",
   });
-  const [searchTerm, setSearchTerm] = useState(""); // New state for search term
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -64,7 +64,7 @@ function EmployeeManagement() {
           a.name.localeCompare(b.name)
         );
         setEmployees(sortedData);
-        setFilteredEmployees(sortedData); // Initialize filtered data
+        setFilteredEmployees(sortedData);
       } catch (err) {
         console.error("Error fetching data:", err);
         setError("Failed to load employee data");
@@ -75,10 +75,9 @@ function EmployeeManagement() {
     if (user) fetchData();
   }, [user]);
 
-  // Handle search filtering
   useEffect(() => {
     if (!searchTerm) {
-      setFilteredEmployees(employees); // Reset to all employees if search is empty
+      setFilteredEmployees(employees);
       return;
     }
 
@@ -86,21 +85,15 @@ function EmployeeManagement() {
     const filtered = employees.filter((employee) => {
       return (
         employee.name?.toLowerCase().includes(lowerSearchTerm) ||
-        false ||
         employee.email?.toLowerCase().includes(lowerSearchTerm) ||
-        false ||
         roles[employee.role_id]?.toLowerCase().includes(lowerSearchTerm) ||
-        false ||
         departments[employee.department_id]
           ?.toLowerCase()
           .includes(lowerSearchTerm) ||
-        false ||
         formatDate(employee.hire_date)
           ?.toLowerCase()
           .includes(lowerSearchTerm) ||
-        false ||
-        employee.status?.toLowerCase().includes(lowerSearchTerm) ||
-        false
+        employee.status?.toLowerCase().includes(lowerSearchTerm)
       );
     });
     setFilteredEmployees(filtered);
@@ -146,9 +139,9 @@ function EmployeeManagement() {
 
   const getSortIndicator = (key) => {
     if (sortConfig.key === key) {
-      return sortConfig.direction === "asc" ? " ↑" : " ↓";
+      return sortConfig.direction === "asc" ? "↑" : "↓";
     }
-    return " ↕";
+    return "↕";
   };
 
   const handleAddOrUpdateEmployee = async (employeeData, isUpdate = false) => {
@@ -170,7 +163,7 @@ function EmployeeManagement() {
           : (b[sortConfig.key] || "").localeCompare(a[sortConfig.key] || "")
       );
       setEmployees(updatedEmployees);
-      setFilteredEmployees(updatedEmployees); // Update filtered list
+      setFilteredEmployees(updatedEmployees);
     } else {
       const { data: newData, error } = await supabase
         .from("employees")
@@ -184,7 +177,7 @@ function EmployeeManagement() {
           : (b[sortConfig.key] || "").localeCompare(a[sortConfig.key] || "")
       );
       setEmployees(updatedEmployees);
-      setFilteredEmployees(updatedEmployees); // Update filtered list
+      setFilteredEmployees(updatedEmployees);
     }
     setModalConfig({ show: false, mode: "add", employee: null });
     return data;
@@ -200,7 +193,7 @@ function EmployeeManagement() {
         (employee) => employee.id !== id
       );
       setEmployees(updatedEmployees);
-      setFilteredEmployees(updatedEmployees); // Update filtered list
+      setFilteredEmployees(updatedEmployees);
     } catch (error) {
       console.error("Error deleting employee:", error);
       setError("Failed to delete employee");
@@ -252,7 +245,6 @@ function EmployeeManagement() {
         </Button>
       </div>
 
-      {/* Search Input */}
       <Form className="mb-3">
         <InputGroup>
           <Form.Control
@@ -301,38 +293,44 @@ function EmployeeManagement() {
                 <th
                   onClick={() => sortData("name")}
                   style={{ cursor: "pointer" }}
+                  data-sort-indicator={getSortIndicator("name")}
                 >
-                  Name {getSortIndicator("name")}
+                  Name
                 </th>
                 <th
                   onClick={() => sortData("email")}
                   style={{ cursor: "pointer" }}
+                  data-sort-indicator={getSortIndicator("email")}
                 >
-                  Email {getSortIndicator("email")}
+                  Email
                 </th>
                 <th
                   onClick={() => sortData("role_id")}
                   style={{ cursor: "pointer" }}
+                  data-sort-indicator={getSortIndicator("role_id")}
                 >
-                  Role {getSortIndicator("role_id")}
+                  Role
                 </th>
                 <th
                   onClick={() => sortData("department_id")}
                   style={{ cursor: "pointer" }}
+                  data-sort-indicator={getSortIndicator("department_id")}
                 >
-                  Department {getSortIndicator("department_id")}
+                  Department
                 </th>
                 <th
                   onClick={() => sortData("hire_date")}
                   style={{ cursor: "pointer" }}
+                  data-sort-indicator={getSortIndicator("hire_date")}
                 >
-                  Hire Date {getSortIndicator("hire_date")}
+                  Hire Date
                 </th>
                 <th
                   onClick={() => sortData("status")}
                   style={{ cursor: "pointer" }}
+                  data-sort-indicator={getSortIndicator("status")}
                 >
-                  Status {getSortIndicator("status")}
+                  Status
                 </th>
                 <th>Actions</th>
               </tr>
