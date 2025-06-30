@@ -145,18 +145,41 @@ function EmployeeManagement() {
   };
 
   const handleAddOrUpdateEmployee = async (employeeData, isUpdate = false) => {
-    let data;
-    if (isUpdate) {
-      const { data: updatedData, error } = await supabase
-        .from("employees")
-        .update(employeeData)
-        .eq("id", modalConfig.employee.id)
-        .select();
-      if (error) throw error;
-      data = updatedData[0];
+    try {
+      let response;
+      if (isUpdate) {
+        // For updates, use direct Supabase call (Edge Function not designed for updates)
+        const { data: updatedData, error } = await supabase
+          .from("employees")
+          .update(employeeData)
+          .eq("id", modalConfig.employee.id)
+          .select();
+        if (error) throw error;
+        response = updatedData[0];
+      } else {
+        // For adds, call the Edge Function
+        response = await fetch(
+          'https://iwikoypoupxvpiortcci.functions.supabase.co/create-employee',
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml3aWtveXBvdXB4dnBpb3J0Y2NpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk1MDM1MzEsImV4cCI6MjA2NTA3OTUzMX0.I0bXgKw4bVPYdx0bEvnFfuqzfaNa27h_A0JRRdP71dU`
+            },
+            body: JSON.stringify({
+              ...employeeData,
+              created_by: user.id,
+            }),
+          }
+        );
+        const result = await response.json();
+        if (!result.success) throw new Error(result.error || 'Failed to add employee');
+        response = result.employee;
+      }
+
       const updatedEmployees = [
-        ...employees.filter((e) => e.id !== data.id),
-        data,
+        ...employees.filter((e) => e.id !== response.id),
+        response,
       ].sort((a, b) =>
         sortConfig.direction === "asc"
           ? (a[sortConfig.key] || "").localeCompare(b[sortConfig.key] || "")
@@ -164,23 +187,11 @@ function EmployeeManagement() {
       );
       setEmployees(updatedEmployees);
       setFilteredEmployees(updatedEmployees);
-    } else {
-      const { data: newData, error } = await supabase
-        .from("employees")
-        .insert([{ ...employeeData, created_by: user.id }])
-        .select();
-      if (error) throw error;
-      data = newData[0];
-      const updatedEmployees = [...employees, data].sort((a, b) =>
-        sortConfig.direction === "asc"
-          ? (a[sortConfig.key] || "").localeCompare(b[sortConfig.key] || "")
-          : (b[sortConfig.key] || "").localeCompare(a[sortConfig.key] || "")
-      );
-      setEmployees(updatedEmployees);
-      setFilteredEmployees(updatedEmployees);
+      setModalConfig({ show: false, mode: "add", employee: null });
+    } catch (error) {
+      console.error("Error adding/updating employee:", error);
+      setError("Failed to add/update employee");
     }
-    setModalConfig({ show: false, mode: "add", employee: null });
-    return data;
   };
 
   const handleDeleteEmployee = async (id) => {
@@ -344,18 +355,22 @@ function EmployeeManagement() {
                   <td>{departments[employee.department_id] || "N/A"}</td>
                   <td>{formatDate(employee.hire_date)}</td>
                   <td>
-                    <span className={`status-badge ${employee.status}`}>
-                      {employee.status}
+                    <span
+                      className={`status-badge ${
+                        employee.status ? employee.status.toString() : "unknown"
+                      }`}
+                    >
+                      {employee.status || "Unknown"}
                     </span>
                   </td>
                   <td>
                     <Button
                       variant="info"
                       size="sm"
-                      onClick={() =>
-                        setShowProfileModal(true) ||
-                        setModalConfig({ ...modalConfig, employee })
-                      }
+                      onClick={() => {
+                        setShowProfileModal(true);
+                        setModalConfig({ ...modalConfig, employee });
+                      }}
                       className="me-1"
                     >
                       View
