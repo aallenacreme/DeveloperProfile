@@ -1,3 +1,4 @@
+// src/components/Header.js
 import { useState, useEffect, useRef } from "react";
 import { Navbar, Container, Button } from "react-bootstrap";
 import { Link } from "react-router-dom";
@@ -18,15 +19,14 @@ function Header({ aboutSectionRef, profileData }) {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showSignupModal, setShowSignupModal] = useState(false);
   const [isNavExpanded, setIsNavExpanded] = useState(false);
-  const { isLoggedIn, logout } = useAuth();
+  const { isLoggedIn, isEmployee, logout } = useAuth(); // Added isEmployee
 
   const ballRef = useRef(null);
   const titleLetterRefs = useRef([]);
   const firstNameRef = useRef(null);
   const lastNameRef = useRef(null);
   const subtitleRef = useRef(null);
-  // prettier-ignore
-  const resumeDocumentFileUrl= "https://iwikoypoupxvpiortcci.supabase.co/storage/v1/object/sign/devprofilebucket/Resume.pdf?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8xYzQ2ZGY3Mi1hZGM1LTQ1MTgtYWNiZC1mZmEwNTczZDliNjEiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJkZXZwcm9maWxlYnVja2V0L1Jlc3VtZS5wZGYiLCJpYXQiOjE3NTA0NTI5NjgsImV4cCI6MTc4MTk4ODk2OH0.RfXsrXOTqcYtsPNOUqIRA2i1IKAdPo14UuxGsRyJPRY";
+  const resumeDocumentFileUrl = "..."; // Your existing URL
 
   const handleLogout = async () => {
     try {
@@ -130,9 +130,8 @@ function Header({ aboutSectionRef, profileData }) {
               <img src={resume} alt="Resume" className="resume-icon" />
               <span className="tooltip-text">Resume</span>
             </a>
-
             <a
-              href="https://github.com/your-username" // Replace with your GitHub profile
+              href="https://github.com/your-username"
               target="_blank"
               rel="noopener noreferrer"
               className="github-link"
@@ -224,6 +223,25 @@ function Header({ aboutSectionRef, profileData }) {
                   </Button>
                 </Link>
               )}
+              {isLoggedIn &&
+                isEmployee && ( // Add employee-only button
+                  <Link
+                    to="/employee-dashboard"
+                    className={`nav-link ${
+                      activeLink === "employee-dashboard" ? "active" : ""
+                    }`}
+                    onClick={() => handleSetActive("employee-dashboard")}
+                  >
+                    <Button
+                      variant="outline-light"
+                      className={`nav-button ${
+                        activeLink === "employee-dashboard" ? "active" : ""
+                      }`}
+                    >
+                      Employee Dashboard
+                    </Button>
+                  </Link>
+                )}
               {isLoggedIn && (
                 <Link
                   to="/homepage-management"

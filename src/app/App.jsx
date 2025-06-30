@@ -7,8 +7,8 @@ import HomepageManagement from "./components/Management/HomepageManagement";
 import EmployeeManagement from "./components/Management/EmployeeManagement";
 import DepartmentManagement from "./components/Management/DepartmentManagement";
 import RoleManagement from "./components/Management/RoleManagement";
+import EmployeeDashboard from "./components/Worker/EmployeeDashboard";
 import "./assets/custom/app.css";
-import "./auth";
 
 function App() {
   return (
@@ -21,6 +21,11 @@ function App() {
           <Route path="/employees" element={<EmployeeManagement />} />
           <Route path="/departments" element={<DepartmentManagement />} />
           <Route path="/roles" element={<RoleManagement />} />
+          <Route
+            path="/employee-dashboard"
+            element={<EmployeeDashboard />}
+          />{" "}
+          {/* New route */}
         </Routes>
       </Router>
     </AuthProvider>

@@ -9,7 +9,6 @@ import EditProfile from "../../components/EditProfile";
 import { supabase } from "../../services/supabaseClient";
 import { useAuth } from "../../auth";
 
-
 function HomePage() {
   const aboutSectionRef = useRef(null);
   const { user } = useAuth();
@@ -29,7 +28,6 @@ function HomePage() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    
     const fetchProfile = async () => {
       const { data } = await supabase
         .from("profiles")

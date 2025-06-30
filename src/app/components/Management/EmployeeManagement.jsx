@@ -30,10 +30,6 @@ function EmployeeManagement() {
     mode: "add",
     employee: null,
   });
-  const [sortConfig, setSortConfig] = useState({
-    key: "name",
-    direction: "asc",
-  });
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
@@ -60,11 +56,8 @@ function EmployeeManagement() {
           .eq("created_by", user.id);
         if (error) throw error;
 
-        const sortedData = [...(employeeData || [])].sort((a, b) =>
-          a.name.localeCompare(b.name)
-        );
-        setEmployees(sortedData);
-        setFilteredEmployees(sortedData);
+        setEmployees(employeeData || []);
+        setFilteredEmployees(employeeData || []);
       } catch (err) {
         console.error("Error fetching data:", err);
         setError("Failed to load employee data");
@@ -73,7 +66,7 @@ function EmployeeManagement() {
       }
     };
     if (user) fetchData();
-  }, [user]);
+  }, []);
 
   useEffect(() => {
     if (!searchTerm) {
@@ -105,45 +98,6 @@ function EmployeeManagement() {
     return new Date(dateString).toLocaleDateString(undefined, options);
   };
 
-  const sortData = (key) => {
-    const direction =
-      sortConfig.key === key && sortConfig.direction === "asc" ? "desc" : "asc";
-    setSortConfig({ key, direction });
-
-    const sorted = [...filteredEmployees].sort((a, b) => {
-      if (key === "role_id") {
-        const aValue = roles[a[key]] || "N/A";
-        const bValue = roles[b[key]] || "N/A";
-        return direction === "asc"
-          ? aValue.localeCompare(bValue)
-          : bValue.localeCompare(aValue);
-      }
-      if (key === "department_id") {
-        const aValue = departments[a[key]] || "N/A";
-        const bValue = departments[b[key]] || "N/A";
-        return direction === "asc"
-          ? aValue.localeCompare(bValue)
-          : bValue.localeCompare(aValue);
-      }
-      if (key === "hire_date") {
-        const aDate = new Date(a[key] || 0);
-        const bDate = new Date(b[key] || 0);
-        return direction === "asc" ? aDate - bDate : bDate - aDate;
-      }
-      return direction === "asc"
-        ? (a[key] || "").localeCompare(b[key] || "")
-        : (b[key] || "").localeCompare(a[key] || "");
-    });
-    setFilteredEmployees(sorted);
-  };
-
-  const getSortIndicator = (key) => {
-    if (sortConfig.key === key) {
-      return sortConfig.direction === "asc" ? "↑" : "↓";
-    }
-    return "↕";
-  };
-
   const handleAddOrUpdateEmployee = async (employeeData, isUpdate = false) => {
     try {
       let response;
@@ -158,13 +112,16 @@ function EmployeeManagement() {
         response = updatedData[0];
       } else {
         // For adds, call the Edge Function
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
         response = await fetch(
-          'https://iwikoypoupxvpiortcci.functions.supabase.co/create-employee',
+          "https://iwikoypoupxvpiortcci.functions.supabase.co/create-employee",
           {
-            method: 'POST',
+            method: "POST",
             headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml3aWtveXBvdXB4dnBpb3J0Y2NpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk1MDM1MzEsImV4cCI6MjA2NTA3OTUzMX0.I0bXgKw4bVPYdx0bEvnFfuqzfaNa27h_A0JRRdP71dU`
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${session.access_token}`,
             },
             body: JSON.stringify({
               ...employeeData,
@@ -173,18 +130,15 @@ function EmployeeManagement() {
           }
         );
         const result = await response.json();
-        if (!result.success) throw new Error(result.error || 'Failed to add employee');
+        if (!result.success)
+          throw new Error(result.error || "Failed to add employee");
         response = result.employee;
       }
 
       const updatedEmployees = [
         ...employees.filter((e) => e.id !== response.id),
         response,
-      ].sort((a, b) =>
-        sortConfig.direction === "asc"
-          ? (a[sortConfig.key] || "").localeCompare(b[sortConfig.key] || "")
-          : (b[sortConfig.key] || "").localeCompare(a[sortConfig.key] || "")
-      );
+      ];
       setEmployees(updatedEmployees);
       setFilteredEmployees(updatedEmployees);
       setModalConfig({ show: false, mode: "add", employee: null });
@@ -301,48 +255,12 @@ function EmployeeManagement() {
           <Table striped bordered hover responsive className="employee-table">
             <thead>
               <tr>
-                <th
-                  onClick={() => sortData("name")}
-                  style={{ cursor: "pointer" }}
-                  data-sort-indicator={getSortIndicator("name")}
-                >
-                  Name
-                </th>
-                <th
-                  onClick={() => sortData("email")}
-                  style={{ cursor: "pointer" }}
-                  data-sort-indicator={getSortIndicator("email")}
-                >
-                  Email
-                </th>
-                <th
-                  onClick={() => sortData("role_id")}
-                  style={{ cursor: "pointer" }}
-                  data-sort-indicator={getSortIndicator("role_id")}
-                >
-                  Role
-                </th>
-                <th
-                  onClick={() => sortData("department_id")}
-                  style={{ cursor: "pointer" }}
-                  data-sort-indicator={getSortIndicator("department_id")}
-                >
-                  Department
-                </th>
-                <th
-                  onClick={() => sortData("hire_date")}
-                  style={{ cursor: "pointer" }}
-                  data-sort-indicator={getSortIndicator("hire_date")}
-                >
-                  Hire Date
-                </th>
-                <th
-                  onClick={() => sortData("status")}
-                  style={{ cursor: "pointer" }}
-                  data-sort-indicator={getSortIndicator("status")}
-                >
-                  Status
-                </th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Department</th>
+                <th>Hire Date</th>
+                <th>Status</th>
                 <th>Actions</th>
               </tr>
             </thead>

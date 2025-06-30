@@ -61,7 +61,7 @@ function HomepageManagement() {
       }
     };
     if (user) fetchData();
-  }, [user]);
+  }, []);
 
   if (loading) {
     return (

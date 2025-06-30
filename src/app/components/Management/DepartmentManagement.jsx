@@ -55,7 +55,7 @@ function DepartmentManagement() {
       }
     };
     if (user) fetchData();
-  }, [user]);
+  }, []);
 
   // Handle search filtering
   useEffect(() => {

@@ -1,62 +1,63 @@
-import { createContext, useContext, useState, useEffect } from 'react';
-import { supabase } from './services/supabaseClient';
+import { createContext, useContext, useState, useEffect } from "react";
+import { supabase } from "./services/supabaseClient";
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [isEmployee, setIsEmployee] = useState(false); // New state for employee status
+  const [isEmployee, setIsEmployee] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const checkEmployeeStatusAndProfile = async (userId) => {
+    const checkEmployeeStatusAndCreateProfile = async (userId) => {
       if (!userId) {
         setIsEmployee(false);
         return;
       }
 
       try {
-        // Check if user is an employee by querying employees table
+        // Step 1: Check if user is an employee
         const { data: employee, error: employeeError } = await supabase
-          .from('employees')
-          .select('id, name')
-          .eq('user_id', userId)
-          .single();
+          .from("employees")
+          .select("id, name")
+          .eq("user_id", userId)
+          .maybeSingle(); // <- THIS avoids 406 when no row found
 
-        if (employeeError && employeeError.code !== 'PGRST116') {
-          // PGRST116 is "no rows returned", which is fine; other errors are logged
-          console.error('Error checking employee status:', employeeError);
+        if (employeeError && employeeError.code !== "PGRST116") {
+          console.warn("Employee check error:", employeeError.message);
           setIsEmployee(false);
           return;
         }
 
-        setIsEmployee(!!employee); // Set true if employee record exists
+        const isEmp = !!employee;
+        setIsEmployee(isEmp);
 
-        // Check if profile exists, create if missing (for employees)
+        if (!isEmp) return; // Skip profile creation if not employee
+
+        // Step 2: Check if profile already exists
         const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('user_id', userId)
+          .from("profiles")
+          .select("id")
+          .eq("user_id", userId)
           .single();
 
-        if (profileError && profileError.code !== 'PGRST116') {
-          console.error('Error checking profile:', profileError);
+        if (profileError && profileError.code !== "PGRST116") {
+          console.error("Error checking profile:", profileError);
           return;
         }
 
-        if (!profile && employee) {
-          // No profile exists, create one for employee using name from employees table
-          const baseUsername = employee.name.toLowerCase().replace(/\s+/g, '.');
+        // Step 3: Create profile if missing
+        if (!profile) {
+          const baseUsername = employee.name.toLowerCase().replace(/\s+/g, ".");
           let username = baseUsername;
           let suffix = 1;
 
-          // Ensure username is unique
           while (true) {
             const { data: existingProfile } = await supabase
-              .from('profiles')
-              .select('id')
-              .eq('username', username)
+              .from("profiles")
+              .select("id")
+              .eq("username", username)
               .single();
 
             if (!existingProfile) break;
@@ -64,40 +65,42 @@ export const AuthProvider = ({ children }) => {
             suffix++;
           }
 
-          const { error: insertError } = await supabase.from('profiles').insert({
-            user_id: userId,
-            username,
-            name: employee.name,
-          });
+          const { error: insertError } = await supabase
+            .from("profiles")
+            .insert({
+              user_id: userId,
+              username,
+              name: employee.name,
+            });
 
           if (insertError) {
-            console.error('Error creating profile:', insertError);
+            console.error("Error creating profile:", insertError);
           }
         }
       } catch (err) {
-        console.error('Unexpected error in checkEmployeeStatusAndProfile:', err);
+        console.error("Unexpected error in employee/profile check:", err);
         setIsEmployee(false);
       }
     };
 
     // Initial session check
     supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log('Session:', session ? 'Logged in' : 'Logged out', session?.user || null);
       setUser(session?.user ?? null);
       setIsLoggedIn(!!session);
       if (session?.user) {
-        checkEmployeeStatusAndProfile(session.user.id);
+        checkEmployeeStatusAndCreateProfile(session.user.id);
       }
       setLoading(false);
     });
 
-    // Listen for auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      console.log('Auth change:', _event, session ? 'Logged in' : 'Logged out', session?.user || null);
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
       setIsLoggedIn(!!session);
       if (session?.user) {
-        checkEmployeeStatusAndProfile(session.user.id);
+        checkEmployeeStatusAndCreateProfile(session.user.id);
       } else {
         setIsEmployee(false);
       }
@@ -108,7 +111,10 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = async (email, password) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
     if (error) throw error;
   };
 
@@ -120,9 +126,8 @@ export const AuthProvider = ({ children }) => {
     });
     if (error) throw error;
 
-    // Create profile after signup
     if (data.user) {
-      await supabase.from('profiles').insert({
+      await supabase.from("profiles").insert({
         user_id: data.user.id,
         username,
         name: username,
@@ -137,7 +142,9 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, isLoggedIn, isEmployee, loading, login, signup, logout }}>
+    <AuthContext.Provider
+      value={{ user, isLoggedIn, isEmployee, loading, login, signup, logout }}
+    >
       {children}
     </AuthContext.Provider>
   );
@@ -145,6 +152,6 @@ export const AuthProvider = ({ children }) => {
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) throw new Error('useAuth must be used within an AuthProvider');
+  if (!context) throw new Error("useAuth must be used within an AuthProvider");
   return context;
 };
