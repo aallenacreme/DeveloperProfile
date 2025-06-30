@@ -8,6 +8,7 @@ import Footer from "../../components/Footer";
 import EditProfile from "../../components/EditProfile";
 import { supabase } from "../../services/supabaseClient";
 import { useAuth } from "../../auth";
+import getCloudFunction from "../../services/edgeFunctions";
 
 function HomePage() {
   const aboutSectionRef = useRef(null);
@@ -28,6 +29,7 @@ function HomePage() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    getCloudFunction();
     const fetchProfile = async () => {
       const { data } = await supabase
         .from("profiles")
