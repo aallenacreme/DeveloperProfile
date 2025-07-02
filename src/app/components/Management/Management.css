@@ -7,7 +7,9 @@
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
   padding: 2rem;
 }
-
+.list-group-item:hover {
+  background-color: #f8f9fa;
+}
 /* Table Container */
 .employee-table-container {
   border-radius: 8px;

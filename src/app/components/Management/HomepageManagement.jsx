@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Container,
   Spinner,
@@ -16,11 +16,14 @@ import "./homepage.css";
 function HomepageManagement() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const hasFetched = useRef(false);
+
   const [username, setUsername] = useState("User");
   const [employeeCount, setEmployeeCount] = useState(0);
   const [activeEmployeeCount, setActiveEmployeeCount] = useState(0);
   const [departmentCount, setDepartmentCount] = useState(0);
-  const [roleCount, setRoleCount] = useState(0); // Added for roles
+  const [roleCount, setRoleCount] = useState(0);
+  const [taskCount, setTaskCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -28,7 +31,8 @@ function HomepageManagement() {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const [profile, employees, activeEmployees, departments, roles] =
+
+        const [profile, employees, activeEmployees, departments, roles, tasks] =
           await Promise.all([
             supabase
               .from("profiles")
@@ -45,14 +49,19 @@ function HomepageManagement() {
               .eq("created_by", user.id)
               .eq("status", "active"),
             supabase.from("departments").select("id", { count: "exact" }),
-            supabase.from("roles").select("id", { count: "exact" }), // Fetch role count
+            supabase.from("roles").select("id", { count: "exact" }),
+            supabase
+              .from("tasks")
+              .select("id", { count: "exact" })
+              .eq("created_by", user.id),
           ]);
 
         setUsername(profile.data?.username || "User");
         setEmployeeCount(employees.count || 0);
         setActiveEmployeeCount(activeEmployees.count || 0);
         setDepartmentCount(departments.count || 0);
-        setRoleCount(roles.count || 0); // Set role count
+        setRoleCount(roles.count || 0);
+        setTaskCount(tasks.count || 0);
       } catch (err) {
         console.error("Error fetching data:", err);
         setError("Failed to load homepage data");
@@ -60,8 +69,12 @@ function HomepageManagement() {
         setLoading(false);
       }
     };
-    if (user) fetchData();
-  }, []);
+
+    if (user?.id && !hasFetched.current) {
+      hasFetched.current = true;
+      fetchData();
+    }
+  }, [user?.id]);
 
   if (loading) {
     return (
@@ -96,66 +109,54 @@ function HomepageManagement() {
         <div className="header-content">
           <h1 className="page-title">Welcome, {username}!</h1>
           <p className="page-subtitle">
-            Manage your employees, departments, and roles with ease.
+            Manage your employees, departments, roles, and tasks with ease.
           </p>
         </div>
       </header>
       <Row className="mt-5">
-        <Col xs={12} md={4} className="mb-4">
-          <Card className="homepage-card">
-            <Card.Body>
-              <div className="card-icon">👥</div>
-              <Card.Title>Employees</Card.Title>
-              <Card.Text>
-                Total: {employeeCount} | Active: {activeEmployeeCount}
-              </Card.Text>
-              <Button
-                variant="primary"
-                as={Link}
-                to="/employees"
-                className="card-btn"
-              >
-                Manage Employees
-              </Button>
-            </Card.Body>
-          </Card>
-        </Col>
-        <Col xs={12} md={4} className="mb-4">
-          <Card className="homepage-card">
-            <Card.Body>
-              <div className="card-icon">🏢</div>
-              <Card.Title>Departments</Card.Title>
-              <Card.Text>Total: {departmentCount}</Card.Text>
-              <Button
-                variant="primary"
-                as={Link}
-                to="/departments"
-                className="card-btn"
-              >
-                Manage Departments
-              </Button>
-            </Card.Body>
-          </Card>
-        </Col>
-        <Col xs={12} md={4} className="mb-4">
-          <Card className="homepage-card">
-            <Card.Body>
-              <div className="card-icon">🎭</div>
-              <Card.Title>Roles</Card.Title>
-              <Card.Text>Total: {roleCount}</Card.Text>
-              <Button
-                variant="primary"
-                as={Link}
-                to="/roles"
-                className="card-btn"
-              >
-                Manage Roles
-              </Button>
-            </Card.Body>
-          </Card>
-        </Col>
+        <HomepageCard
+          title="Employees"
+          icon="👥"
+          text={`Total: ${employeeCount} | Active: ${activeEmployeeCount}`}
+          to="/employees"
+        />
+        <HomepageCard
+          title="Departments"
+          icon="🏢"
+          text={`Total: ${departmentCount}`}
+          to="/departments"
+        />
+        <HomepageCard
+          title="Roles"
+          icon="🎭"
+          text={`Total: ${roleCount}`}
+          to="/roles"
+        />
+        <HomepageCard
+          title="Task Management"
+          icon="📋"
+          text={`Total: ${taskCount}`}
+          to="/tasks"
+        />
       </Row>
     </Container>
+  );
+}
+
+function HomepageCard({ title, icon, text, to }) {
+  return (
+    <Col xs={12} md={3} className="mb-4">
+      <Card className="homepage-card">
+        <Card.Body>
+          <div className="card-icon">{icon}</div>
+          <Card.Title>{title}</Card.Title>
+          <Card.Text>{text}</Card.Text>
+          <Button variant="primary" as={Link} to={to} className="card-btn">
+            Manage {title}
+          </Button>
+        </Card.Body>
+      </Card>
+    </Col>
   );
 }
 
