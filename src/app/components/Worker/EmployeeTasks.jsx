@@ -128,11 +128,13 @@ function EmployeeTasks() {
   const handleTaskAction = async (taskId, newStatus) => {
     try {
       setError(null);
-      const { error } = await supabase
+      const { error, data } = await supabase
         .from("tasks")
         .update({ status: newStatus })
-        .eq("id", taskId);
+        .eq("id", taskId)
+        .select(); // Add .select() to get updated row
 
+      console.log("Update result:", { error, data });
       if (error) throw error;
     } catch (err) {
       console.error(`Error updating task to ${newStatus}:`, err);
