@@ -105,7 +105,19 @@ function EmployeeManagement() {
         // For updates, use direct Supabase call (Edge Function not designed for updates)
         const { data: updatedData, error } = await supabase
           .from("employees")
-          .update(employeeData)
+          .update({
+            name: employeeData.name,
+            email: employeeData.email,
+            role_id: employeeData.role_id,
+            department_id: employeeData.department_id,
+            age: employeeData.age,
+            salary: employeeData.salary,
+            hire_date: employeeData.hire_date,
+            status: employeeData.status,
+            phone: employeeData.phone,
+            address: employeeData.address,
+            skills: employeeData.skills,
+          })
           .eq("id", modalConfig.employee.id)
           .select();
         if (error) throw error;

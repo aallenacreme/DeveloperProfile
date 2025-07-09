@@ -23,6 +23,7 @@ export default function EmployeeFormModal({
     phone: "",
     address: "",
     skills: "",
+    password: "", // Added password field
   });
   const [formError, setFormError] = useState(null);
   const [formLoading, setFormLoading] = useState(false);
@@ -41,6 +42,7 @@ export default function EmployeeFormModal({
         phone: employee.phone || "",
         address: employee.address || "",
         skills: employee.skills?.length > 0 ? employee.skills.join(", ") : "",
+        password: "", // Password not pre-filled for security
       });
     } else {
       setFormData({
@@ -55,6 +57,7 @@ export default function EmployeeFormModal({
         phone: "",
         address: "",
         skills: "",
+        password: "",
       });
     }
   }, [isEdit, employee]);
@@ -68,6 +71,7 @@ export default function EmployeeFormModal({
     e.preventDefault();
     setFormError(null);
 
+    // Validate required fields
     if (
       !formData.name.trim() ||
       !formData.email.trim() ||
@@ -81,15 +85,23 @@ export default function EmployeeFormModal({
       return;
     }
 
+    // Validate age
     const ageNum = formData.age ? parseInt(formData.age, 10) : null;
     if (ageNum && (ageNum < 18 || ageNum > 120)) {
       setFormError("Age must be between 18 and 120.");
       return;
     }
 
+    // Validate salary
     const salaryNum = formData.salary ? parseFloat(formData.salary) : null;
     if (salaryNum && salaryNum < 0) {
       setFormError("Salary must be a positive number.");
+      return;
+    }
+
+    // Validate password (if provided)
+    if (formData.password && formData.password.length < 6) {
+      setFormError("Password must be at least 6 characters.");
       return;
     }
 
@@ -114,6 +126,7 @@ export default function EmployeeFormModal({
           phone: formData.phone.trim() || null,
           address: formData.address.trim() || null,
           skills: skillsArray.length > 0 ? skillsArray : null,
+          password: formData.password || null, // Pass password if provided
         },
         isEdit
       );
@@ -268,6 +281,19 @@ export default function EmployeeFormModal({
               />
             </Form.Group>
 
+            <Form.Group as={Col} controlId="formPassword">
+              <Form.Label>Password (Optional)</Form.Label>
+              <Form.Control
+                type="password"
+                name="password"
+                value={formData.password}
+                onChange={handleFormChange}
+                placeholder="Set initial password"
+              />
+            </Form.Group>
+          </Row>
+
+          <Row className="mb-3">
             <Form.Group as={Col} controlId="formAddress">
               <Form.Label>Address</Form.Label>
               <Form.Control

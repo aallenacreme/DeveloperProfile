@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import {
   Container,
   Table,
@@ -22,7 +22,6 @@ function TaskManagement() {
   const channelRef = useRef(null);
 
   const [tasks, setTasks] = useState([]);
-  const [filteredTasks, setFilteredTasks] = useState([]);
   const [employees, setEmployees] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -33,38 +32,40 @@ function TaskManagement() {
   });
   const [searchTerm, setSearchTerm] = useState("");
 
-  // ⬇️ One-time fetch using user.id (not full object)
+  // Fetch initial data
   useEffect(() => {
     if (!user?.id || hasFetched.current) return;
 
     const fetchData = async () => {
       try {
         setLoading(true);
-        setError(null);
 
+        // Fetch employees
         const { data: employeeData, error: employeeError } = await supabase
           .from("employees")
           .select("id, name, user_id")
           .eq("created_by", user.id);
-
         if (employeeError) throw employeeError;
-
-        const employeeMap = employeeData?.reduce(
-          (acc, emp) => ({ ...acc, [emp.user_id]: emp.name }),
-          {}
+        setEmployees(
+          employeeData.reduce(
+            (acc, emp) => ({ ...acc, [emp.user_id]: emp.name }),
+            {}
+          )
         );
 
-        setEmployees(employeeMap || {});
-
+        // Fetch tasks with duplicate check
         const { data: taskData, error: taskError } = await supabase
           .from("tasks")
           .select("*")
           .eq("created_by", user.id);
-
         if (taskError) throw taskError;
 
-        setTasks(taskData || []);
-        setFilteredTasks(taskData || []);
+        // Remove potential duplicates
+        const uniqueTasks = taskData.filter(
+          (task, index, self) =>
+            index === self.findIndex((t) => t.id === task.id)
+        );
+        setTasks(uniqueTasks);
       } catch (err) {
         console.error("Error fetching data:", err);
         setError("Failed to load task data");
@@ -77,7 +78,7 @@ function TaskManagement() {
     hasFetched.current = true;
   }, [user?.id]);
 
-  // ⬇️ Real-time listener (set up once)
+  // Real-time
   useEffect(() => {
     if (!user?.id || channelRef.current) return;
 
@@ -94,128 +95,85 @@ function TaskManagement() {
         (payload) => {
           const { eventType, new: newTask, old: oldTask } = payload;
 
-          if (eventType === "INSERT") {
-            setTasks((prev) => [...prev, newTask]);
-            setFilteredTasks((prev) => [...prev, newTask]);
-          } else if (eventType === "UPDATE") {
-            setTasks((prev) =>
-              prev.map((t) => (t.id === newTask.id ? newTask : t))
-            );
-            setFilteredTasks((prev) =>
-              prev.map((t) => (t.id === newTask.id ? newTask : t))
-            );
-          } else if (eventType === "DELETE") {
-            setTasks((prev) => prev.filter((t) => t.id !== oldTask.id));
-            setFilteredTasks((prev) => prev.filter((t) => t.id !== oldTask.id));
-          }
+          setTasks((prev) => {
+            const taskExists = prev.some((task) => task.id === newTask?.id);
+
+            switch (eventType) {
+              case "INSERT":
+                return taskExists ? prev : [...prev, newTask];
+              case "UPDATE":
+                return prev.map((t) => (t.id === newTask.id ? newTask : t));
+              case "DELETE":
+                return prev.filter((t) => t.id !== oldTask.id);
+              default:
+                return prev;
+            }
+          });
         }
       )
-      .subscribe()
-      .on("error", (err) => {
-        console.error("Realtime channel error:", err);
-        setError("Realtime connection error");
-      });
+      .subscribe();
 
     channelRef.current = channel;
-
     return () => {
       supabase.removeChannel(channel);
       channelRef.current = null;
     };
   }, [user?.id]);
 
-  // ⬇️ Filter tasks based on search
-  useEffect(() => {
-    if (!searchTerm) {
-      setFilteredTasks(tasks);
-      return;
-    }
-
+  // Filter tasks
+  const filteredTasks = useMemo(() => {
+    if (!searchTerm) return tasks;
     const lower = searchTerm.toLowerCase();
-    setFilteredTasks(
-      tasks.filter((task) => {
-        return (
-          task.title?.toLowerCase().includes(lower) ||
-          task.description?.toLowerCase().includes(lower) ||
-          task.employee_description?.toLowerCase().includes(lower) ||
-          task.status?.toLowerCase().includes(lower) ||
-          employees[task.assigned_to]?.toLowerCase().includes(lower)
-        );
-      })
+    return tasks.filter((task) =>
+      [
+        task.title,
+        task.description,
+        task.employee_description,
+        task.status,
+        employees[task.assigned_to],
+      ].some((field) => field?.toLowerCase().includes(lower))
     );
-  }, [searchTerm, tasks, employees]);
+  }, [tasks, searchTerm, employees]);
 
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";
-    try {
-      return new Date(dateString).toLocaleDateString(undefined, {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-      });
-    } catch {
-      return "Invalid date";
-    }
+    return new Date(dateString).toLocaleDateString(undefined, {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
   };
 
   const handleAddOrUpdateTask = async (taskData, isUpdate = false) => {
+    if (!taskData?.title || !taskData?.assigned_to) {
+      setError("Title and assigned employee are required");
+      return;
+    }
     try {
       setError(null);
-      let response;
+      await supabase
+        .from("tasks")
+        [isUpdate ? "update" : "insert"](
+          isUpdate ? taskData : { ...taskData, created_by: user.id }
+        )
+        .eq("id", isUpdate ? modalConfig.task.id : undefined);
 
-      if (isUpdate) {
-        const { data, error } = await supabase
-          .from("tasks")
-          .update(taskData)
-          .eq("id", modalConfig.task?.id)
-          .select();
-        if (error) throw error;
-        response = data?.[0];
-      } else {
-        const { data, error } = await supabase
-          .from("tasks")
-          .insert({ ...taskData, created_by: user?.id })
-          .select();
-        if (error) throw error;
-        response = data?.[0];
-      }
-
-      if (!response) throw new Error("No response");
-
-      const updated = [...tasks.filter((t) => t.id !== response.id), response];
-      setTasks(updated);
-      setFilteredTasks(updated);
       setModalConfig({ show: false, mode: "add", task: null });
     } catch (err) {
       console.error("Task save error:", err);
-      setError("Failed to add/update task");
+      setError("Failed to save task");
     }
   };
 
   const handleDeleteTask = async (id) => {
     if (!window.confirm("Are you sure you want to delete this task?")) return;
     try {
-      const { error } = await supabase.from("tasks").delete().eq("id", id);
-      if (error) throw error;
-      const updated = tasks.filter((t) => t.id !== id);
-      setTasks(updated);
-      setFilteredTasks(updated);
+      await supabase.from("tasks").delete().eq("id", id);
     } catch (err) {
       console.error("Task delete error:", err);
       setError("Failed to delete task");
     }
   };
-
-  if (!user) {
-    return (
-      <Container
-        className="d-flex justify-content-center align-items-center"
-        style={{ minHeight: "50vh" }}
-      >
-        <Spinner animation="border" variant="primary" />
-      </Container>
-    );
-  }
 
   if (loading) {
     return (
@@ -312,7 +270,7 @@ function TaskManagement() {
                 <th>Description</th>
                 <th>Assigned Employee</th>
                 <th>Status</th>
-                <th>Employee Notes</th>
+                {/* Removed Employee Notes column */}
                 <th>Created</th>
                 <th>Updated</th>
                 <th>Actions</th>
@@ -333,7 +291,7 @@ function TaskManagement() {
                       {task.status || "Unknown"}
                     </span>
                   </td>
-                  <td>{task.employee_description || "N/A"}</td>
+                  {/* Removed Employee Notes cell */}
                   <td>{formatDate(task.created_at)}</td>
                   <td>{formatDate(task.updated_at)}</td>
                   <td>
