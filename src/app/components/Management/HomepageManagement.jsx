@@ -24,6 +24,7 @@ function HomepageManagement() {
   const [departmentCount, setDepartmentCount] = useState(0);
   const [roleCount, setRoleCount] = useState(0);
   const [taskCount, setTaskCount] = useState(0);
+  const [messageCount, setMessageCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -32,29 +33,40 @@ function HomepageManagement() {
       try {
         setLoading(true);
 
-        const [profile, employees, activeEmployees, departments, roles, tasks] =
-          await Promise.all([
-            supabase
-              .from("profiles")
-              .select("username")
-              .eq("user_id", user.id)
-              .single(),
-            supabase
-              .from("employees")
-              .select("id", { count: "exact" })
-              .eq("created_by", user.id),
-            supabase
-              .from("employees")
-              .select("id", { count: "exact" })
-              .eq("created_by", user.id)
-              .eq("status", "active"),
-            supabase.from("departments").select("id", { count: "exact" }),
-            supabase.from("roles").select("id", { count: "exact" }),
-            supabase
-              .from("tasks")
-              .select("id", { count: "exact" })
-              .eq("created_by", user.id),
-          ]);
+        const [
+          profile,
+          employees,
+          activeEmployees,
+          departments,
+          roles,
+          tasks,
+          messages,
+        ] = await Promise.all([
+          supabase
+            .from("profiles")
+            .select("username")
+            .eq("user_id", user.id)
+            .single(),
+          supabase
+            .from("employees")
+            .select("id", { count: "exact" })
+            .eq("created_by", user.id),
+          supabase
+            .from("employees")
+            .select("id", { count: "exact" })
+            .eq("created_by", user.id)
+            .eq("status", "active"),
+          supabase.from("departments").select("id", { count: "exact" }),
+          supabase.from("roles").select("id", { count: "exact" }),
+          supabase
+            .from("tasks")
+            .select("id", { count: "exact" })
+            .eq("created_by", user.id),
+          supabase
+            .from("messages")
+            .select("id", { count: "exact" })
+            .eq("receiver_id", user.id),
+        ]);
 
         setUsername(profile.data?.username || "User");
         setEmployeeCount(employees.count || 0);
@@ -62,6 +74,7 @@ function HomepageManagement() {
         setDepartmentCount(departments.count || 0);
         setRoleCount(roles.count || 0);
         setTaskCount(tasks.count || 0);
+        setMessageCount(messages.count || 0);
       } catch (err) {
         console.error("Error fetching data:", err);
         setError("Failed to load homepage data");
@@ -109,7 +122,8 @@ function HomepageManagement() {
         <div className="header-content">
           <h1 className="page-title">Welcome, {username}!</h1>
           <p className="page-subtitle">
-            Manage your employees, departments, roles, and tasks with ease.
+            Manage your employees, departments, roles, tasks, and messages with
+            ease.
           </p>
         </div>
       </header>
@@ -137,6 +151,12 @@ function HomepageManagement() {
           icon="📋"
           text={`Total: ${taskCount}`}
           to="/tasks"
+        />
+        <HomepageCard
+          title="Messages"
+          icon="💬"
+          text={`Total: ${messageCount}`}
+          to="/messages"
         />
       </Row>
     </Container>

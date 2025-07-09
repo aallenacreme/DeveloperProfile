@@ -11,6 +11,8 @@ import EmployeeDashboard from "./components/Worker/EmployeeDashboard";
 import TaskManagement from "./components/Management/TaskManagement";
 import "./assets/custom/app.css";
 import EmployeeTasks from "./components/Worker/EmployeeTasks";
+import MessageManagement from "./components/Management/MessageManagement";
+
 function App() {
   return (
     <AuthProvider>
@@ -24,6 +26,7 @@ function App() {
           <Route path="/roles" element={<RoleManagement />} />
           <Route path="/tasks" element={<TaskManagement />} />
           <Route path="/employee-tasks" element={<EmployeeTasks />} />
+          <Route path="/messages" element={<MessageManagement />} />
           <Route
             path="/employee-dashboard"
             element={<EmployeeDashboard />}
