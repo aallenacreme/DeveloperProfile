@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { Modal, Button, Form, InputGroup, Spinner } from "react-bootstrap";
-import { supabase } from "../../services/supabaseClient";
+import { supabase } from "../../../services/supabaseClient";
 
-function MessageFormModal({ show, onClose, onSelectContact, userId }) {
+function MessageFormModal({ show, onClose, onSelectConversation, userId }) {
   const [contacts, setContacts] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
@@ -14,7 +14,7 @@ function MessageFormModal({ show, onClose, onSelectContact, userId }) {
         const { data: contactData, error } = await supabase
           .from("profiles")
           .select("user_id, username, name")
-          .neq("user_id", userId);
+          .neq("user_id", userId); // exclude current user
 
         if (error) throw error;
 
@@ -42,6 +42,44 @@ function MessageFormModal({ show, onClose, onSelectContact, userId }) {
       contact.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       contact.name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const handleSelect = async (contact) => {
+    try {
+      // Check for existing conversation between the two users
+      const { data: existing, error: findError } = await supabase
+        .from("conversations")
+        .select("*")
+        .or(
+          `and(participant1.eq.${userId},participant2.eq.${contact.user_id}),and(participant1.eq.${contact.user_id},participant2.eq.${userId})`
+        )
+        .maybeSingle();
+
+      if (findError && findError.code !== "PGRST116") throw findError;
+
+      let conversation = existing;
+
+      // If no conversation exists, create one
+      if (!conversation) {
+        const { data: created, error: insertError } = await supabase
+          .from("conversations")
+          .insert({
+            participant1: userId,
+            participant2: contact.user_id,
+          })
+          .select()
+          .single();
+
+        if (insertError) throw insertError;
+
+        conversation = created;
+      }
+
+      onSelectConversation(conversation); // ✅ Return selected conversation
+      onClose();
+    } catch (err) {
+      console.error("Error selecting/creating conversation:", err);
+    }
+  };
 
   return (
     <Modal show={show} onHide={onClose} centered>
@@ -81,7 +119,7 @@ function MessageFormModal({ show, onClose, onSelectContact, userId }) {
                   key={contact.user_id}
                   className="p-2 border-bottom"
                   style={{ cursor: "pointer" }}
-                  onClick={() => onSelectContact(contact)}
+                  onClick={() => handleSelect(contact)}
                 >
                   <strong>{contact.username}</strong>
                   {contact.name && (

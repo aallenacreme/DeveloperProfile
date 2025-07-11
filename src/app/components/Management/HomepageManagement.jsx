@@ -33,20 +33,22 @@ function HomepageManagement() {
       try {
         setLoading(true);
 
+        // Fetch conversations for the user to get their IDs
+        const { data: profileData, error: profileError } = await supabase
+          .from("profiles")
+          .select("username")
+          .eq("user_id", user.id)
+          .single();
+        if (profileError) throw profileError;
+
         const [
-          profile,
           employees,
           activeEmployees,
           departments,
           roles,
           tasks,
-          messages,
+          conversations,
         ] = await Promise.all([
-          supabase
-            .from("profiles")
-            .select("username")
-            .eq("user_id", user.id)
-            .single(),
           supabase
             .from("employees")
             .select("id", { count: "exact" })
@@ -63,18 +65,33 @@ function HomepageManagement() {
             .select("id", { count: "exact" })
             .eq("created_by", user.id),
           supabase
-            .from("messages")
-            .select("id", { count: "exact" })
-            .eq("receiver_id", user.id),
+            .from("conversations")
+            .select("id")
+            .or(`participant1.eq.${user.id},participant2.eq.${user.id}`),
         ]);
 
-        setUsername(profile.data?.username || "User");
+        setUsername(profileData?.username || "User");
         setEmployeeCount(employees.count || 0);
         setActiveEmployeeCount(activeEmployees.count || 0);
         setDepartmentCount(departments.count || 0);
         setRoleCount(roles.count || 0);
         setTaskCount(tasks.count || 0);
-        setMessageCount(messages.count || 0);
+
+        // Count messages in all user's conversations
+        let totalMessages = 0;
+        if (conversations.data && conversations.data.length > 0) {
+          const conversationIds = conversations.data.map((c) => c.id);
+
+          const { count: messageCountResult, error: messageCountError } =
+            await supabase
+              .from("messages")
+              .select("id", { count: "exact", head: true })
+              .in("conversation_id", conversationIds);
+
+          if (messageCountError) throw messageCountError;
+          totalMessages = messageCountResult || 0;
+        }
+        setMessageCount(totalMessages);
       } catch (err) {
         console.error("Error fetching data:", err);
         setError("Failed to load homepage data");

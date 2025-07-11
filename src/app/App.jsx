@@ -11,7 +11,7 @@ import EmployeeDashboard from "./components/Worker/EmployeeDashboard";
 import TaskManagement from "./components/Management/TaskManagement";
 import "./assets/custom/app.css";
 import EmployeeTasks from "./components/Worker/EmployeeTasks";
-import MessageManagement from "./components/Management/MessageManagement";
+import MessageManagement from "./components/Management/Messages/MessageManagement";
 
 function App() {
   return (
