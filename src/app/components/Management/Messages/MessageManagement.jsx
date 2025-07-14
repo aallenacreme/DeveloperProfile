@@ -19,6 +19,7 @@ function MessageManagement() {
   const [error, setError] = useState(null);
   const [modalConfig, setModalConfig] = useState({ show: false });
   const [userNames, setUserNames] = useState({});
+  const [unreadCounts, setUnreadCounts] = useState({});
 
   const fetchData = async () => {
     try {
@@ -46,6 +47,17 @@ function MessageManagement() {
         namesMap[u.user_id] = u.username;
       });
       setUserNames(namesMap);
+
+      const { data: unreadData, error: unreadError } = await supabase
+        .from("unread_messages")
+        .select("conversation_id, count")
+        .eq("user_id", user.id);
+      if (unreadError) throw new Error("Failed to load unread counts");
+      const unreadMap = {};
+      unreadData.forEach((item) => {
+        unreadMap[item.conversation_id] = item.count || 0;
+      });
+      setUnreadCounts(unreadMap);
     } catch (err) {
       setError(err.message);
     }
@@ -68,32 +80,60 @@ function MessageManagement() {
           .order("created_at", { ascending: true });
         if (error) throw new Error("Failed to load messages");
         setMessages(data || []);
+
+        await supabase
+          .from("unread_messages")
+          .upsert({ user_id: user.id, conversation_id: selectedConversation.id, count: 0 });
+        setUnreadCounts((prev) => ({
+          ...prev,
+          [selectedConversation.id]: 0,
+        }));
       } catch (err) {
         setError(err.message);
       }
     };
 
     fetchMessages();
-  }, [selectedConversation]);
+  }, [selectedConversation, user]);
 
   useEffect(() => {
-    if (!user || !selectedConversation || channelRef.current) return;
+    if (!user || conversations.length === 0) return;
 
     const channel = supabase
-      .channel(`messages:${selectedConversation.id}`)
+      .channel("messages_all")
       .on(
         "postgres_changes",
         {
           event: "INSERT",
           schema: "public",
           table: "messages",
-          filter: `conversation_id=eq.${selectedConversation.id}`,
+          filter: `conversation_id=in.(${conversations.map((c) => c.id).join(",")})`,
         },
-        (payload) => {
+        async (payload) => {
+          const conversationId = payload.new.conversation_id;
           setMessages((prev) => {
-            if (prev.some((m) => m.id === payload.new.id)) return prev;
-            return [...prev, payload.new];
+            if (conversationId === selectedConversation?.id) {
+              if (prev.some((m) => m.id === payload.new.id)) return prev;
+              return [...prev, payload.new];
+            }
+            return prev;
           });
+
+          if (conversationId !== selectedConversation?.id && payload.new.sender_id !== user.id) {
+            setUnreadCounts((prev) => {
+              const newCount = (prev[conversationId] || 0) + 1;
+              (async () => {
+                try {
+                  await supabase
+                    .from("unread_messages")
+                    .upsert({ user_id: user.id, conversation_id: conversationId, count: newCount });
+                } catch (err) {
+                  setError("Failed to update unread count");
+                }
+              })();
+              return { ...prev, [conversationId]: newCount };
+            });
+          }
         }
       )
       .subscribe();
@@ -105,7 +145,7 @@ function MessageManagement() {
         channelRef.current = null;
       }
     };
-  }, [selectedConversation, user]);
+  }, [conversations, selectedConversation, user]);
 
   const handleSendMessage = async () => {
     if (!newMessage.trim() || !selectedConversation) return;
@@ -168,6 +208,7 @@ function MessageManagement() {
           setSelectedConversation={setSelectedConversation}
           user={user}
           userNames={userNames}
+          unreadCounts={unreadCounts}
         />
         <div style={{ flex: 1, paddingLeft: "1rem" }}>
           <ChatArea

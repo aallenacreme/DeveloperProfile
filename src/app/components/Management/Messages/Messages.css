@@ -1,0 +1,85 @@
+/* Messages.css */
+
+/* MessageManagement Component */
+.message-management-container {
+  min-height: 50vh;
+}
+
+.page-title {
+  display: inline-block;
+  margin-left: 1rem;
+}
+
+/* ConversationList Component */
+.conversation-list {
+  width: 300px;
+  border-right: 1px solid #ccc;
+  padding: 1rem;
+}
+
+.conversation-item {
+  padding: 0.5иса
+
+  .5rem;
+  cursor: pointer;
+  position: relative;
+}
+
+.conversation-item.selected {
+  background: #e9ecef;
+}
+
+.conversation-timestamp {
+  font-size: 0.8rem;
+  color: #666;
+}
+
+.new-message-indicator {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  width: 10px;
+  height: 10px;
+  background-color: blue;
+  border-radius: 50%;
+}
+
+.delete-conversation-btn {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  background: none;
+  border: none;
+  color: #666;
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0;
+  display: none;
+}
+
+.conversation-item:hover .delete-conversation-btn {
+  display: block;
+}
+
+/* ChatArea Component */
+.chat-container {
+  height: 400px;
+  overflow-y: auto;
+  margin-bottom: 1rem;
+}
+
+.message {
+  max-width: 70%;
+  padding: 0.5rem;
+  border-radius: 0.25rem;
+}
+
+.message.sent {
+  background-color: #007bff;
+  color: white;
+}
+
+.message.received {
+  background-color: #f8f9fa;
+  color: black;
+}

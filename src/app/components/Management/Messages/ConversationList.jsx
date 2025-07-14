@@ -1,12 +1,12 @@
 import React from "react";
 
-// Sidebar component to list conversations
 function ConversationList({
   conversations,
   selectedConversation,
   setSelectedConversation,
   user,
   userNames,
+  unreadCounts,
 }) {
   return (
     <div
@@ -19,6 +19,7 @@ function ConversationList({
             conv.participant1 === user.id
               ? conv.participant2
               : conv.participant1;
+          const unreadCount = unreadCounts[conv.id] || 0;
           return (
             <li
               key={conv.id}
@@ -29,13 +30,29 @@ function ConversationList({
                     ? "#e9ecef"
                     : "transparent",
                 cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
               }}
               onClick={() => setSelectedConversation(conv)}
             >
-              👤 {userNames[otherId] || otherId}
-              <div style={{ fontSize: "0.8rem", color: "#666" }}>
-                {new Date(conv.created_at).toLocaleString()}
+              <div>
+                👤 {userNames[otherId] || otherId}
+                <div style={{ fontSize: "0.8rem", color: "#666" }}>
+                  {new Date(conv.created_at).toLocaleString()}
+                </div>
               </div>
+              {unreadCount > 0 && (
+                <span
+                  style={{
+                    background: "blue",
+                    borderRadius: "50%",
+                    width: "10px",
+                    height: "10px",
+                    display: "inline-block",
+                  }}
+                />
+              )}
             </li>
           );
         })}
