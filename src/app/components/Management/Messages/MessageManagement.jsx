@@ -20,6 +20,27 @@ function MessageManagement() {
   const [modalConfig, setModalConfig] = useState({ show: false });
   const [userNames, setUserNames] = useState({});
   const [unreadCounts, setUnreadCounts] = useState({});
+  const [visibilityMap, setVisibilityMap] = useState({});
+  const [hoveredConversation, setHoveredConversation] = useState(null);
+
+  const fetchVisibility = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("conversation_visibility")
+        .select("conversation_id, is_visible")
+        .eq("user_id", user.id);
+
+      if (error) throw error;
+
+      const newVisibilityMap = {};
+      data.forEach((item) => {
+        newVisibilityMap[item.conversation_id] = item.is_visible;
+      });
+      setVisibilityMap(newVisibilityMap);
+    } catch (err) {
+      console.error("Error fetching visibility:", err.message);
+    }
+  };
 
   const fetchData = async () => {
     try {
@@ -28,14 +49,18 @@ function MessageManagement() {
         .select("id, participant1, participant2, created_at")
         .or(`participant1.eq.${user.id},participant2.eq.${user.id}`)
         .order("created_at", { ascending: false });
+
       if (convError) throw new Error("Failed to load conversations");
       setConversations(convData || []);
+
+      await fetchVisibility();
 
       const participantIds = new Set();
       convData.forEach((conv) => {
         participantIds.add(conv.participant1);
         participantIds.add(conv.participant2);
       });
+
       const { data: userData, error: userError } = await supabase
         .from("profiles")
         .select("user_id, username")
@@ -53,6 +78,7 @@ function MessageManagement() {
         .select("conversation_id, count")
         .eq("user_id", user.id);
       if (unreadError) throw new Error("Failed to load unread counts");
+
       const unreadMap = {};
       unreadData.forEach((item) => {
         unreadMap[item.conversation_id] = item.count || 0;
@@ -60,6 +86,30 @@ function MessageManagement() {
       setUnreadCounts(unreadMap);
     } catch (err) {
       setError(err.message);
+    }
+  };
+
+  const handleHideConversation = async (conversationId) => {
+    try {
+      // Update local state
+      setVisibilityMap((prev) => ({
+        ...prev,
+        [conversationId]: false,
+      }));
+
+      // Update database
+      await supabase.from("conversation_visibility").upsert({
+        user_id: user.id,
+        conversation_id: conversationId,
+        is_visible: false,
+      });
+
+      // Deselect if currently selected
+      if (selectedConversation?.id === conversationId) {
+        setSelectedConversation(null);
+      }
+    } catch (err) {
+      console.error("Error hiding conversation:", err.message);
     }
   };
 
@@ -81,9 +131,11 @@ function MessageManagement() {
         if (error) throw new Error("Failed to load messages");
         setMessages(data || []);
 
-        await supabase
-          .from("unread_messages")
-          .upsert({ user_id: user.id, conversation_id: selectedConversation.id, count: 0 });
+        await supabase.from("unread_messages").upsert({
+          user_id: user.id,
+          conversation_id: selectedConversation.id,
+          count: 0,
+        });
         setUnreadCounts((prev) => ({
           ...prev,
           [selectedConversation.id]: 0,
@@ -107,10 +159,27 @@ function MessageManagement() {
           event: "INSERT",
           schema: "public",
           table: "messages",
-          filter: `conversation_id=in.(${conversations.map((c) => c.id).join(",")})`,
+          filter: `conversation_id=in.(${conversations
+            .map((c) => c.id)
+            .join(",")})`,
         },
         async (payload) => {
           const conversationId = payload.new.conversation_id;
+
+          // Make conversation visible if new message arrives
+          if (visibilityMap[conversationId] === false) {
+            setVisibilityMap((prev) => ({
+              ...prev,
+              [conversationId]: true,
+            }));
+
+            await supabase.from("conversation_visibility").upsert({
+              user_id: user.id,
+              conversation_id: conversationId,
+              is_visible: true,
+            });
+          }
+
           setMessages((prev) => {
             if (conversationId === selectedConversation?.id) {
               if (prev.some((m) => m.id === payload.new.id)) return prev;
@@ -119,14 +188,19 @@ function MessageManagement() {
             return prev;
           });
 
-          if (conversationId !== selectedConversation?.id && payload.new.sender_id !== user.id) {
+          if (
+            conversationId !== selectedConversation?.id &&
+            payload.new.sender_id !== user.id
+          ) {
             setUnreadCounts((prev) => {
               const newCount = (prev[conversationId] || 0) + 1;
               (async () => {
                 try {
-                  await supabase
-                    .from("unread_messages")
-                    .upsert({ user_id: user.id, conversation_id: conversationId, count: newCount });
+                  await supabase.from("unread_messages").upsert({
+                    user_id: user.id,
+                    conversation_id: conversationId,
+                    count: newCount,
+                  });
                 } catch (err) {
                   setError("Failed to update unread count");
                 }
@@ -145,7 +219,7 @@ function MessageManagement() {
         channelRef.current = null;
       }
     };
-  }, [conversations, selectedConversation, user]);
+  }, [conversations, selectedConversation, user, visibilityMap]);
 
   const handleSendMessage = async () => {
     if (!newMessage.trim() || !selectedConversation) return;
@@ -203,12 +277,17 @@ function MessageManagement() {
 
       <div className="d-flex">
         <ConversationList
-          conversations={conversations}
+          conversations={conversations.filter(
+            (conv) => visibilityMap[conv.id] !== false
+          )}
           selectedConversation={selectedConversation}
           setSelectedConversation={setSelectedConversation}
           user={user}
           userNames={userNames}
           unreadCounts={unreadCounts}
+          hoveredConversation={hoveredConversation}
+          setHoveredConversation={setHoveredConversation}
+          handleHideConversation={handleHideConversation}
         />
         <div style={{ flex: 1, paddingLeft: "1rem" }}>
           <ChatArea

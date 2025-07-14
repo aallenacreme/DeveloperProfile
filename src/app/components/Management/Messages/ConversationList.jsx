@@ -1,4 +1,5 @@
 import React from "react";
+import { Button } from "react-bootstrap";
 
 function ConversationList({
   conversations,
@@ -7,6 +8,9 @@ function ConversationList({
   user,
   userNames,
   unreadCounts,
+  hoveredConversation,
+  setHoveredConversation,
+  handleHideConversation,
 }) {
   return (
     <div
@@ -33,8 +37,11 @@ function ConversationList({
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
+                position: "relative",
               }}
               onClick={() => setSelectedConversation(conv)}
+              onMouseEnter={() => setHoveredConversation(conv.id)}
+              onMouseLeave={() => setHoveredConversation(null)}
             >
               <div>
                 👤 {userNames[otherId] || otherId}
@@ -42,17 +49,36 @@ function ConversationList({
                   {new Date(conv.created_at).toLocaleString()}
                 </div>
               </div>
-              {unreadCount > 0 && (
-                <span
-                  style={{
-                    background: "blue",
-                    borderRadius: "50%",
-                    width: "10px",
-                    height: "10px",
-                    display: "inline-block",
-                  }}
-                />
-              )}
+              <div style={{ display: "flex", alignItems: "center" }}>
+                {unreadCount > 0 && (
+                  <span
+                    style={{
+                      background: "blue",
+                      borderRadius: "50%",
+                      width: "10px",
+                      height: "10px",
+                      display: "inline-block",
+                      marginRight: "8px",
+                    }}
+                  />
+                )}
+                {hoveredConversation === conv.id && (
+                  <Button
+                    variant="link"
+                    style={{
+                      color: "red",
+                      padding: "0 4px",
+                      fontSize: "0.8rem",
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleHideConversation(conv.id);
+                    }}
+                  >
+                    ×
+                  </Button>
+                )}
+              </div>
             </li>
           );
         })}
