@@ -5,6 +5,8 @@ import { supabase } from "../../../services/supabaseClient";
 function MessageFormModal({ show, onClose, onSelectConversation, userId }) {
   const [contacts, setContacts] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedContacts, setSelectedContacts] = useState([]);
+  const [groupName, setGroupName] = useState("");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -14,7 +16,7 @@ function MessageFormModal({ show, onClose, onSelectConversation, userId }) {
         const { data: contactData, error } = await supabase
           .from("profiles")
           .select("user_id, username, name")
-          .neq("user_id", userId); // exclude current user
+          .neq("user_id", userId);
 
         if (error) throw error;
 
@@ -43,48 +45,68 @@ function MessageFormModal({ show, onClose, onSelectConversation, userId }) {
       contact.name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleSelect = async (contact) => {
+  const handleSelect = (contact) => {
+    if (selectedContacts.some((c) => c.user_id === contact.user_id)) {
+      setSelectedContacts(
+        selectedContacts.filter((c) => c.user_id !== contact.user_id)
+      );
+    } else {
+      setSelectedContacts([...selectedContacts, contact]);
+    }
+  };
+
+  const handleCreateConversation = async () => {
     try {
-      // Check for existing conversation between the two users
-      const { data: existing, error: findError } = await supabase
-        .from("conversations")
-        .select("*")
-        .or(
-          `and(participant1.eq.${userId},participant2.eq.${contact.user_id}),and(participant1.eq.${contact.user_id},participant2.eq.${userId})`
-        )
-        .maybeSingle();
-
-      if (findError && findError.code !== "PGRST116") throw findError;
-
-      let conversation = existing;
-
-      // If no conversation exists, create one
-      if (!conversation) {
-        const { data: created, error: insertError } = await supabase
-          .from("conversations")
-          .insert({
-            participant1: userId,
-            participant2: contact.user_id,
-          })
-          .select()
-          .single();
-
-        if (insertError) throw insertError;
-
-        conversation = created;
+      if (selectedContacts.length === 0) {
+        alert("Select at least one contact.");
+        return;
       }
 
-      onSelectConversation(conversation); // ✅ Return selected conversation
+      const { data: created, error: insertError } = await supabase
+        .from("conversations")
+        .insert({ name: groupName || null })
+        .select()
+        .single();
+
+      if (insertError) throw insertError;
+
+      const participants = [
+        { conversation_id: created.id, user_id: userId },
+        ...selectedContacts.map((contact) => ({
+          conversation_id: created.id,
+          user_id: contact.user_id,
+        })),
+      ];
+
+      const { error: participantError } = await supabase
+        .from("conversation_participants")
+        .insert(participants);
+
+      if (participantError) throw participantError;
+
+      const visibilityEntries = participants.map((p) => ({
+        conversation_id: created.id,
+        user_id: p.user_id,
+        is_visible: true,
+      }));
+
+      const { error: visibilityError } = await supabase
+        .from("conversation_visibility")
+        .insert(visibilityEntries);
+
+      if (visibilityError) throw visibilityError;
+
+      onSelectConversation(created);
       onClose();
     } catch (err) {
-      console.error("Error selecting/creating conversation:", err);
+      console.error("Error creating group conversation:", err);
     }
   };
 
   return (
     <Modal show={show} onHide={onClose} centered>
       <Modal.Header closeButton>
-        <Modal.Title>Select Contact</Modal.Title>
+        <Modal.Title>Create Chat</Modal.Title>
       </Modal.Header>
       <Modal.Body>
         {loading ? (
@@ -94,6 +116,15 @@ function MessageFormModal({ show, onClose, onSelectConversation, userId }) {
         ) : (
           <>
             <Form className="mb-3">
+              <Form.Group className="mb-3">
+                <Form.Label>Group Name (optional)</Form.Label>
+                <Form.Control
+                  type="text"
+                  placeholder="Enter group name..."
+                  value={groupName}
+                  onChange={(e) => setGroupName(e.target.value)}
+                />
+              </Form.Group>
               <InputGroup>
                 <Form.Control
                   type="text"
@@ -111,6 +142,23 @@ function MessageFormModal({ show, onClose, onSelectConversation, userId }) {
                 )}
               </InputGroup>
             </Form>
+            {selectedContacts.length > 0 && (
+              <div className="mb-3">
+                <strong>Selected: </strong>
+                {selectedContacts.map((c) => (
+                  <span key={c.user_id} className="badge bg-primary me-1">
+                    {c.username}
+                    <Button
+                      variant="link"
+                      className="text-white"
+                      onClick={() => handleSelect(c)}
+                    >
+                      ×
+                    </Button>
+                  </span>
+                ))}
+              </div>
+            )}
             {filteredContacts.length === 0 ? (
               <p>No contacts found</p>
             ) : (
@@ -121,6 +169,14 @@ function MessageFormModal({ show, onClose, onSelectConversation, userId }) {
                   style={{ cursor: "pointer" }}
                   onClick={() => handleSelect(contact)}
                 >
+                  <input
+                    type="checkbox"
+                    checked={selectedContacts.some(
+                      (c) => c.user_id === contact.user_id
+                    )}
+                    onChange={() => {}}
+                    className="me-2"
+                  />
                   <strong>{contact.username}</strong>
                   {contact.name && (
                     <small className="d-block">{contact.name}</small>
@@ -134,6 +190,9 @@ function MessageFormModal({ show, onClose, onSelectConversation, userId }) {
       <Modal.Footer>
         <Button variant="secondary" onClick={onClose}>
           Close
+        </Button>
+        <Button variant="primary" onClick={handleCreateConversation}>
+          Create Chat
         </Button>
       </Modal.Footer>
     </Modal>

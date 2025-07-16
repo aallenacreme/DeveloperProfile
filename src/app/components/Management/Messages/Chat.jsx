@@ -1,7 +1,6 @@
 import { useEffect, useRef } from "react";
 import { Card, Form, InputGroup, Button } from "react-bootstrap";
 
-// Chat area component to show messages and send new ones
 function ChatArea({
   selectedConversation,
   messages,
@@ -13,7 +12,6 @@ function ChatArea({
 }) {
   const messageEndRef = useRef(null);
 
-  // Auto-scroll to latest message
   useEffect(() => {
     if (messageEndRef.current) {
       messageEndRef.current.scrollIntoView({ behavior: "smooth" });
@@ -30,18 +28,17 @@ function ChatArea({
     );
   }
 
-  const otherId =
-    selectedConversation.participant1 === user.id
-      ? selectedConversation.participant2
-      : selectedConversation.participant1;
+  const displayName =
+    selectedConversation.name ||
+    (userNames[selectedConversation.id]?.length
+      ? userNames[selectedConversation.id].join(", ")
+      : "Group Chat");
 
   return (
     <Card>
       <Card.Body>
-        <h5>Chat with {userNames[otherId] || otherId}</h5>
-        <div
-          style={{ height: "400px", overflowY: "auto", marginBottom: "1rem" }}
-        >
+        <h5>Chat with {displayName}</h5>
+        <div className="message-list">
           {messages.map((msg) => (
             <div
               key={msg.id}
@@ -56,9 +53,11 @@ function ChatArea({
                   msg.sender_id === user.id
                     ? "bg-primary text-white"
                     : "bg-light text-dark"
-                }`}
-                style={{ maxWidth: "70%" }}
+                } message-bubble`}
               >
+                <small className="d-block">
+                  {userNames[msg.sender_id] || msg.sender_id}
+                </small>
                 {msg.content}
               </div>
             </div>

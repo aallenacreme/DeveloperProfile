@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import MessageFormModal from "./MessageFormModal";
 import ConversationList from "./ConversationList";
 import ChatArea from "./Chat";
+import "./messages.css";
 
 function MessageManagement() {
   const { user, loading: authLoading } = useAuth();
@@ -44,39 +45,68 @@ function MessageManagement() {
 
   const fetchData = async () => {
     try {
+      // Fetch conversations where user is a participant
       const { data: convData, error: convError } = await supabase
-        .from("conversations")
-        .select("id, participant1, participant2, created_at")
-        .or(`participant1.eq.${user.id},participant2.eq.${user.id}`)
-        .order("created_at", { ascending: false });
+        .from("conversation_participants")
+        .select("conversation_id, conversations!inner(id, created_at, name)")
+        .eq("user_id", user.id)
+        .order("created_at", {
+          foreignTable: "conversations",
+          ascending: false,
+        });
 
       if (convError) throw new Error("Failed to load conversations");
-      setConversations(convData || []);
+
+      const conversationIds = convData.map((c) => c.conversation_id);
+      setConversations(
+        convData.map((c) => c.conversations).filter((c) => c) || []
+      );
 
       await fetchVisibility();
 
-      const participantIds = new Set();
-      convData.forEach((conv) => {
-        participantIds.add(conv.participant1);
-        participantIds.add(conv.participant2);
-      });
+      // Fetch all participants for each conversation
+      const { data: participantData, error: participantError } = await supabase
+        .from("conversation_participants")
+        .select("conversation_id, user_id")
+        .in("conversation_id", conversationIds);
+
+      if (participantError) throw new Error("Failed to load participants");
+
+      const participantIds = [
+        ...new Set(participantData.map((p) => p.user_id)),
+      ];
 
       const { data: userData, error: userError } = await supabase
         .from("profiles")
         .select("user_id, username")
-        .in("user_id", Array.from(participantIds));
+        .in("user_id", participantIds);
+
       if (userError) throw new Error("Failed to load usernames");
 
       const namesMap = {};
       userData.forEach((u) => {
         namesMap[u.user_id] = u.username;
       });
-      setUserNames(namesMap);
+
+      // Map conversation_id to array of participant usernames (excluding current user)
+      const convNamesMap = {};
+      participantData.forEach((p) => {
+        if (!convNamesMap[p.conversation_id]) {
+          convNamesMap[p.conversation_id] = [];
+        }
+        if (p.user_id !== user.id) {
+          convNamesMap[p.conversation_id].push(
+            namesMap[p.user_id] || p.user_id
+          );
+        }
+      });
+      setUserNames(convNamesMap);
 
       const { data: unreadData, error: unreadError } = await supabase
         .from("unread_messages")
         .select("conversation_id, count")
         .eq("user_id", user.id);
+
       if (unreadError) throw new Error("Failed to load unread counts");
 
       const unreadMap = {};
@@ -91,20 +121,17 @@ function MessageManagement() {
 
   const handleHideConversation = async (conversationId) => {
     try {
-      // Update local state
       setVisibilityMap((prev) => ({
         ...prev,
         [conversationId]: false,
       }));
 
-      // Update database
       await supabase.from("conversation_visibility").upsert({
         user_id: user.id,
         conversation_id: conversationId,
         is_visible: false,
       });
 
-      // Deselect if currently selected
       if (selectedConversation?.id === conversationId) {
         setSelectedConversation(null);
       }
@@ -128,6 +155,7 @@ function MessageManagement() {
           .select("id, sender_id, content, created_at")
           .eq("conversation_id", selectedConversation.id)
           .order("created_at", { ascending: true });
+
         if (error) throw new Error("Failed to load messages");
         setMessages(data || []);
 
@@ -166,7 +194,6 @@ function MessageManagement() {
         async (payload) => {
           const conversationId = payload.new.conversation_id;
 
-          // Make conversation visible if new message arrives
           if (visibilityMap[conversationId] === false) {
             setVisibilityMap((prev) => ({
               ...prev,
@@ -224,7 +251,7 @@ function MessageManagement() {
   const handleSendMessage = async () => {
     if (!newMessage.trim() || !selectedConversation) return;
     try {
-      await supabase.from("messages").insert({
+      await supabase.from("messages").upsert({
         sender_id: user.id,
         conversation_id: selectedConversation.id,
         content: newMessage.trim(),
@@ -233,6 +260,11 @@ function MessageManagement() {
     } catch (err) {
       setError("Failed to send message");
     }
+  };
+
+  const handleNewConversation = async (conversation) => {
+    await fetchData();
+    setSelectedConversation(conversation);
   };
 
   if (authLoading || !user) {
@@ -289,7 +321,7 @@ function MessageManagement() {
           setHoveredConversation={setHoveredConversation}
           handleHideConversation={handleHideConversation}
         />
-        <div style={{ flex: 1, paddingLeft: "1rem" }}>
+        <div className="chat-area-wrapper">
           <ChatArea
             selectedConversation={selectedConversation}
             messages={messages}
@@ -305,13 +337,8 @@ function MessageManagement() {
       <MessageFormModal
         show={modalConfig.show}
         onClose={() => setModalConfig({ show: false })}
-        onSelectConversation={async (conversation) => {
-          await fetchData();
-          setSelectedConversation(conversation);
-          setModalConfig({ show: false });
-        }}
+        onSelectConversation={handleNewConversation}
         userId={user.id}
-        conversations={conversations}
       />
     </Container>
   );

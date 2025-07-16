@@ -1,4 +1,3 @@
-import React from "react";
 import { Button } from "react-bootstrap";
 
 function ConversationList({
@@ -13,63 +12,38 @@ function ConversationList({
   handleHideConversation,
 }) {
   return (
-    <div
-      style={{ width: "300px", borderRight: "1px solid #ccc", padding: "1rem" }}
-    >
+    <div className="conversation-list-container">
       <h5>Conversations</h5>
-      <ul style={{ listStyle: "none", padding: 0 }}>
+      <ul className="conversation-list">
         {conversations.map((conv) => {
-          const otherId =
-            conv.participant1 === user.id
-              ? conv.participant2
-              : conv.participant1;
+          const displayName =
+            conv.name ||
+            (userNames[conv.id]?.length
+              ? userNames[conv.id].join(", ")
+              : "Group Chat");
           const unreadCount = unreadCounts[conv.id] || 0;
           return (
             <li
               key={conv.id}
-              style={{
-                padding: "0.5rem",
-                background:
-                  selectedConversation?.id === conv.id
-                    ? "#e9ecef"
-                    : "transparent",
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                position: "relative",
-              }}
+              className={`conversation-item ${
+                selectedConversation?.id === conv.id ? "selected" : ""
+              }`}
               onClick={() => setSelectedConversation(conv)}
               onMouseEnter={() => setHoveredConversation(conv.id)}
               onMouseLeave={() => setHoveredConversation(null)}
             >
               <div>
-                👤 {userNames[otherId] || otherId}
-                <div style={{ fontSize: "0.8rem", color: "#666" }}>
+                👥 {displayName}
+                <div className="timestamp">
                   {new Date(conv.created_at).toLocaleString()}
                 </div>
               </div>
-              <div style={{ display: "flex", alignItems: "center" }}>
-                {unreadCount > 0 && (
-                  <span
-                    style={{
-                      background: "blue",
-                      borderRadius: "50%",
-                      width: "10px",
-                      height: "10px",
-                      display: "inline-block",
-                      marginRight: "8px",
-                    }}
-                  />
-                )}
+              <div className="d-flex align-items-center">
+                {unreadCount > 0 && <span className="unread-indicator" />}
                 {hoveredConversation === conv.id && (
                   <Button
                     variant="link"
-                    style={{
-                      color: "red",
-                      padding: "0 4px",
-                      fontSize: "0.8rem",
-                    }}
+                    className="hide-button"
                     onClick={(e) => {
                       e.stopPropagation();
                       handleHideConversation(conv.id);
