@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Container, Spinner, Alert, Button } from "react-bootstrap";
 import { supabase } from "../../../services/supabaseClient";
 import { useAuth } from "../../../auth";
@@ -13,7 +13,6 @@ function MessageManagement() {
   // Get user data and authentication loading state; set up navigation
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
-  const channelRef = useRef(null);
 
   // State for storing conversations, selected chat, messages, and UI controls
   const [conversations, setConversations] = useState([]); // List of user conversations
@@ -29,30 +28,26 @@ function MessageManagement() {
 
   // Fetches visibility status of conversations for the user
   const fetchVisibility = async () => {
-    try {
-      const { data, error } = await supabase
-        .from("conversation_visibility")
-        .select("conversation_id, is_visible")
-        .eq("user_id", user.id);
+    const { data, error } = await supabase
+      .from("conversation_visibility")
+      .select("conversation_id, is_visible")
+      .eq("user_id", user.id);
 
-      if (error) throw error;
+    if (error) throw error;
 
-      // Create a map of conversation IDs to their visibility status
-      const newVisibilityMap = {};
-      data.forEach((item) => {
-        newVisibilityMap[item.conversation_id] = item.is_visible;
-      });
-      setVisibilityMap(newVisibilityMap);
-    } catch (err) {
-      console.error("Error fetching visibility:", err.message);
-    }
+    // Create a map of conversation IDs to their visibility status
+    const newVisibilityMap = {};
+    data.forEach((item) => {
+      newVisibilityMap[item.conversation_id] = item.is_visible;
+    });
+    return newVisibilityMap;
   };
 
-  // Fetches all conversations, participants, usernames, and unread message counts
+  // Fetches all conversations, participants, usernames, and unread message counts in parallel
   const fetchData = async () => {
     try {
-      // Get conversations where the user is a participant
-      const { data: convData, error: convError } = await supabase
+      // Fetch conversations
+      const conversationsPromise = supabase
         .from("conversation_participants")
         .select("conversation_id, conversations!inner(id, created_at, name)")
         .eq("user_id", user.id)
@@ -61,28 +56,54 @@ function MessageManagement() {
           ascending: false,
         });
 
-      if (convError) throw new Error("Failed to load conversations");
+      // Fetch visibility
+      const visibilityPromise = fetchVisibility();
 
-      // Extract conversation IDs and store conversation details
-      const conversationIds = convData.map((c) => c.conversation_id);
+      // Fetch usernames (dependent on conversation IDs)
+      const conversationIdsPromise = conversationsPromise.then(({ data }) =>
+        data ? data.map((c) => c.conversation_id) : []
+      );
+      const usernamePromise = conversationIdsPromise.then((conversationIds) =>
+        supabase
+          .from("conversation_participants")
+          .select(
+            `
+            conversation_id,
+            profiles!inner(username)
+          `
+          )
+          .in("conversation_id", conversationIds)
+          .neq("user_id", user.id)
+      );
+
+      // Fetch unread counts
+      const unreadPromise = supabase
+        .from("unread_messages")
+        .select("conversation_id, count")
+        .eq("user_id", user.id);
+
+      // Execute all fetches in parallel
+      const [
+        { data: convData, error: convError },
+        visibilityData,
+        { data: usernameData, error: usernameError },
+        { data: unreadData, error: unreadError },
+      ] = await Promise.all([
+        conversationsPromise,
+        visibilityPromise,
+        usernamePromise,
+        unreadPromise,
+      ]);
+
+      if (convError) throw new Error("Failed to load conversations");
+      if (usernameError) throw new Error("Failed to load usernames");
+      if (unreadError) throw new Error("Failed to load unread counts");
+
+      // Process conversations
       setConversations(convData.map((c) => c.conversations));
 
-      // Fetch visibility status for conversations
-      await fetchVisibility();
-
-      // Fetch usernames for participants in conversations (excluding current user)
-      const { data: usernameData, error: usernameError } = await supabase
-        .from("conversation_participants")
-        .select(
-          `
-          conversation_id,
-          profiles!inner(username)
-        `
-        )
-        .in("conversation_id", conversationIds)
-        .neq("user_id", user.id);
-
-      if (usernameError) throw new Error("Failed to load usernames");
+      // Process visibility
+      setVisibilityMap(visibilityData);
 
       // Map conversation IDs to lists of participant usernames
       const convNamesMap = {};
@@ -93,14 +114,6 @@ function MessageManagement() {
         convNamesMap[conversation_id].push(profiles.username || "Unknown User");
       });
       setUserNames(convNamesMap);
-
-      // Fetch unread message counts for the user
-      const { data: unreadData, error: unreadError } = await supabase
-        .from("unread_messages")
-        .select("conversation_id, count")
-        .eq("user_id", user.id);
-
-      if (unreadError) throw new Error("Failed to load unread counts");
 
       // Create a map of conversation IDs to unread message counts
       const unreadMap = {};
@@ -228,17 +241,11 @@ function MessageManagement() {
           ) {
             setUnreadCounts((prev) => {
               const newCount = (prev[conversationId] || 0) + 1;
-              (async () => {
-                try {
-                  await supabase.from("unread_messages").upsert({
-                    user_id: user.id,
-                    conversation_id: conversationId,
-                    count: newCount,
-                  });
-                } catch (err) {
-                  setError("Failed to update unread count");
-                }
-              })();
+              supabase.from("unread_messages").upsert({
+                user_id: user.id,
+                conversation_id: conversationId,
+                count: newCount,
+              });
               return { ...prev, [conversationId]: newCount };
             });
           }
@@ -246,13 +253,9 @@ function MessageManagement() {
       )
       .subscribe();
 
-    channelRef.current = channel;
     // Cleanup subscription on component unmount
     return () => {
-      if (channelRef.current) {
-        supabase.removeChannel(channelRef.current);
-        channelRef.current = null;
-      }
+      supabase.removeChannel(channel);
     };
   }, [conversations, selectedConversation, user, visibilityMap]);
 
