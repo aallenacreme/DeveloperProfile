@@ -24,7 +24,6 @@ function HomepageManagement() {
   const [departmentCount, setDepartmentCount] = useState(0);
   const [roleCount, setRoleCount] = useState(0);
   const [taskCount, setTaskCount] = useState(0);
-  const [messageCount, setMessageCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -33,7 +32,7 @@ function HomepageManagement() {
       try {
         setLoading(true);
 
-        // Fetch conversations for the user to get their IDs
+        // Fetch user profile and other counts, excluding messages
         const { data: profileData, error: profileError } = await supabase
           .from("profiles")
           .select("username")
@@ -41,34 +40,24 @@ function HomepageManagement() {
           .single();
         if (profileError) throw profileError;
 
-        const [
-          employees,
-          activeEmployees,
-          departments,
-          roles,
-          tasks,
-          conversations,
-        ] = await Promise.all([
-          supabase
-            .from("employees")
-            .select("id", { count: "exact" })
-            .eq("created_by", user.id),
-          supabase
-            .from("employees")
-            .select("id", { count: "exact" })
-            .eq("created_by", user.id)
-            .eq("status", "active"),
-          supabase.from("departments").select("id", { count: "exact" }),
-          supabase.from("roles").select("id", { count: "exact" }),
-          supabase
-            .from("tasks")
-            .select("id", { count: "exact" })
-            .eq("created_by", user.id),
-          supabase
-            .from("conversations")
-            .select("id")
-            .or(`participant1.eq.${user.id},participant2.eq.${user.id}`),
-        ]);
+        const [employees, activeEmployees, departments, roles, tasks] =
+          await Promise.all([
+            supabase
+              .from("employees")
+              .select("id", { count: "exact" })
+              .eq("created_by", user.id),
+            supabase
+              .from("employees")
+              .select("id", { count: "exact" })
+              .eq("created_by", user.id)
+              .eq("status", "active"),
+            supabase.from("departments").select("id", { count: "exact" }),
+            supabase.from("roles").select("id", { count: "exact" }),
+            supabase
+              .from("tasks")
+              .select("id", { count: "exact" })
+              .eq("created_by", user.id),
+          ]);
 
         setUsername(profileData?.username || "User");
         setEmployeeCount(employees.count || 0);
@@ -76,22 +65,6 @@ function HomepageManagement() {
         setDepartmentCount(departments.count || 0);
         setRoleCount(roles.count || 0);
         setTaskCount(tasks.count || 0);
-
-        // Count messages in all user's conversations
-        let totalMessages = 0;
-        if (conversations.data && conversations.data.length > 0) {
-          const conversationIds = conversations.data.map((c) => c.id);
-
-          const { count: messageCountResult, error: messageCountError } =
-            await supabase
-              .from("messages")
-              .select("id", { count: "exact", head: true })
-              .in("conversation_id", conversationIds);
-
-          if (messageCountError) throw messageCountError;
-          totalMessages = messageCountResult || 0;
-        }
-        setMessageCount(totalMessages);
       } catch (err) {
         console.error("Error fetching data:", err);
         setError("Failed to load homepage data");
@@ -172,7 +145,7 @@ function HomepageManagement() {
         <HomepageCard
           title="Messages"
           icon="💬"
-          text={`Total: ${messageCount}`}
+          text="View your messages"
           to="/messages"
         />
       </Row>

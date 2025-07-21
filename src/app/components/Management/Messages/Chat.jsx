@@ -7,7 +7,6 @@ function ChatArea({
   newMessage,
   setNewMessage,
   user,
-  userNames,
   handleSendMessage,
 }) {
   const messageEndRef = useRef(null);
@@ -28,16 +27,10 @@ function ChatArea({
     );
   }
 
-  const displayName =
-    selectedConversation.name ||
-    (userNames[selectedConversation.id]?.length
-      ? userNames[selectedConversation.id].join(", ")
-      : "Group Chat");
-
   return (
     <Card>
       <Card.Body>
-        <h5>Chat with {displayName}</h5>
+        <h5>Chat with {selectedConversation.name || "Group Chat"}</h5>
         <div className="message-list">
           {messages.map((msg) => (
             <div
@@ -55,9 +48,7 @@ function ChatArea({
                     : "bg-light text-dark"
                 } message-bubble`}
               >
-                <small className="d-block">
-                  {userNames[msg.sender_id] || msg.sender_id}
-                </small>
+                <small className="d-block">{msg.sender_username}</small>
                 {msg.content}
               </div>
             </div>

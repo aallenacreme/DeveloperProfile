@@ -8,22 +8,26 @@ import ConversationList from "./ConversationList";
 import ChatArea from "./Chat";
 import "./messages.css";
 
+// Main component for managing user messages and conversations
 function MessageManagement() {
+  // Get user data and authentication loading state; set up navigation
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const channelRef = useRef(null);
 
-  const [conversations, setConversations] = useState([]);
-  const [selectedConversation, setSelectedConversation] = useState(null);
-  const [messages, setMessages] = useState([]);
-  const [newMessage, setNewMessage] = useState("");
-  const [error, setError] = useState(null);
-  const [modalConfig, setModalConfig] = useState({ show: false });
-  const [userNames, setUserNames] = useState({});
-  const [unreadCounts, setUnreadCounts] = useState({});
-  const [visibilityMap, setVisibilityMap] = useState({});
-  const [hoveredConversation, setHoveredConversation] = useState(null);
+  // State for storing conversations, selected chat, messages, and UI controls
+  const [conversations, setConversations] = useState([]); // List of user conversations
+  const [selectedConversation, setSelectedConversation] = useState(null); // Currently selected conversation
+  const [messages, setMessages] = useState([]); // Messages in the selected conversation
+  const [newMessage, setNewMessage] = useState(""); // Text for a new message
+  const [error, setError] = useState(null); // Error messages for UI display
+  const [modalConfig, setModalConfig] = useState({ show: false }); // Controls new message modal
+  const [userNames, setUserNames] = useState({}); // Maps conversation IDs to participant usernames
+  const [unreadCounts, setUnreadCounts] = useState({}); // Tracks unread message counts per conversation
+  const [visibilityMap, setVisibilityMap] = useState({}); // Tracks which conversations are visible
+  const [hoveredConversation, setHoveredConversation] = useState(null); // Tracks hovered conversation for UI effects
 
+  // Fetches visibility status of conversations for the user
   const fetchVisibility = async () => {
     try {
       const { data, error } = await supabase
@@ -33,6 +37,7 @@ function MessageManagement() {
 
       if (error) throw error;
 
+      // Create a map of conversation IDs to their visibility status
       const newVisibilityMap = {};
       data.forEach((item) => {
         newVisibilityMap[item.conversation_id] = item.is_visible;
@@ -43,9 +48,10 @@ function MessageManagement() {
     }
   };
 
+  // Fetches all conversations, participants, usernames, and unread message counts
   const fetchData = async () => {
     try {
-      // Fetch conversations where user is a participant
+      // Get conversations where the user is a participant
       const { data: convData, error: convError } = await supabase
         .from("conversation_participants")
         .select("conversation_id, conversations!inner(id, created_at, name)")
@@ -57,51 +63,38 @@ function MessageManagement() {
 
       if (convError) throw new Error("Failed to load conversations");
 
+      // Extract conversation IDs and store conversation details
       const conversationIds = convData.map((c) => c.conversation_id);
-      setConversations(
-        convData.map((c) => c.conversations).filter((c) => c) || []
-      );
+      setConversations(convData.map((c) => c.conversations));
 
+      // Fetch visibility status for conversations
       await fetchVisibility();
 
-      // Fetch all participants for each conversation
-      const { data: participantData, error: participantError } = await supabase
+      // Fetch usernames for participants in conversations (excluding current user)
+      const { data: usernameData, error: usernameError } = await supabase
         .from("conversation_participants")
-        .select("conversation_id, user_id")
-        .in("conversation_id", conversationIds);
+        .select(
+          `
+          conversation_id,
+          profiles!inner(username)
+        `
+        )
+        .in("conversation_id", conversationIds)
+        .neq("user_id", user.id);
 
-      if (participantError) throw new Error("Failed to load participants");
+      if (usernameError) throw new Error("Failed to load usernames");
 
-      const participantIds = [
-        ...new Set(participantData.map((p) => p.user_id)),
-      ];
-
-      const { data: userData, error: userError } = await supabase
-        .from("profiles")
-        .select("user_id, username")
-        .in("user_id", participantIds);
-
-      if (userError) throw new Error("Failed to load usernames");
-
-      const namesMap = {};
-      userData.forEach((u) => {
-        namesMap[u.user_id] = u.username;
-      });
-
-      // Map conversation_id to array of participant usernames (excluding current user)
+      // Map conversation IDs to lists of participant usernames
       const convNamesMap = {};
-      participantData.forEach((p) => {
-        if (!convNamesMap[p.conversation_id]) {
-          convNamesMap[p.conversation_id] = [];
+      usernameData.forEach(({ conversation_id, profiles }) => {
+        if (!convNamesMap[conversation_id]) {
+          convNamesMap[conversation_id] = [];
         }
-        if (p.user_id !== user.id) {
-          convNamesMap[p.conversation_id].push(
-            namesMap[p.user_id] || p.user_id
-          );
-        }
+        convNamesMap[conversation_id].push(profiles.username || "Unknown User");
       });
       setUserNames(convNamesMap);
 
+      // Fetch unread message counts for the user
       const { data: unreadData, error: unreadError } = await supabase
         .from("unread_messages")
         .select("conversation_id, count")
@@ -109,6 +102,7 @@ function MessageManagement() {
 
       if (unreadError) throw new Error("Failed to load unread counts");
 
+      // Create a map of conversation IDs to unread message counts
       const unreadMap = {};
       unreadData.forEach((item) => {
         unreadMap[item.conversation_id] = item.count || 0;
@@ -119,19 +113,23 @@ function MessageManagement() {
     }
   };
 
+  // Hides a conversation by marking it invisible in the database
   const handleHideConversation = async (conversationId) => {
     try {
+      // Update local visibility state
       setVisibilityMap((prev) => ({
         ...prev,
         [conversationId]: false,
       }));
 
+      // Update visibility in the database
       await supabase.from("conversation_visibility").upsert({
         user_id: user.id,
         conversation_id: conversationId,
         is_visible: false,
       });
 
+      // Clear selected conversation if it was hidden
       if (selectedConversation?.id === conversationId) {
         setSelectedConversation(null);
       }
@@ -140,25 +138,29 @@ function MessageManagement() {
     }
   };
 
+  // Fetches conversation data when the user is authenticated
   useEffect(() => {
     if (authLoading || !user) return;
     fetchData();
   }, [authLoading, user]);
 
+  // Fetches messages for the selected conversation and resets unread count
   useEffect(() => {
     if (!selectedConversation) return;
 
     const fetchMessages = async () => {
       try {
+        // Get all messages for the selected conversation
         const { data, error } = await supabase
           .from("messages")
-          .select("id, sender_id, content, created_at")
+          .select("id, sender_id, sender_username, content, created_at")
           .eq("conversation_id", selectedConversation.id)
           .order("created_at", { ascending: true });
 
         if (error) throw new Error("Failed to load messages");
         setMessages(data || []);
 
+        // Reset unread message count for the conversation
         await supabase.from("unread_messages").upsert({
           user_id: user.id,
           conversation_id: selectedConversation.id,
@@ -176,9 +178,11 @@ function MessageManagement() {
     fetchMessages();
   }, [selectedConversation, user]);
 
+  // Sets up real-time subscription for new messages
   useEffect(() => {
     if (!user || conversations.length === 0) return;
 
+    // Subscribe to new messages in all user conversations
     const channel = supabase
       .channel("messages_all")
       .on(
@@ -194,6 +198,7 @@ function MessageManagement() {
         async (payload) => {
           const conversationId = payload.new.conversation_id;
 
+          // Unhide conversation if a new message arrives
           if (visibilityMap[conversationId] === false) {
             setVisibilityMap((prev) => ({
               ...prev,
@@ -207,6 +212,7 @@ function MessageManagement() {
             });
           }
 
+          // Add new message to the selected conversation
           setMessages((prev) => {
             if (conversationId === selectedConversation?.id) {
               if (prev.some((m) => m.id === payload.new.id)) return prev;
@@ -215,6 +221,7 @@ function MessageManagement() {
             return prev;
           });
 
+          // Update unread count for non-selected conversations
           if (
             conversationId !== selectedConversation?.id &&
             payload.new.sender_id !== user.id
@@ -240,6 +247,7 @@ function MessageManagement() {
       .subscribe();
 
     channelRef.current = channel;
+    // Cleanup subscription on component unmount
     return () => {
       if (channelRef.current) {
         supabase.removeChannel(channelRef.current);
@@ -248,25 +256,38 @@ function MessageManagement() {
     };
   }, [conversations, selectedConversation, user, visibilityMap]);
 
+  // Sends a new message in the selected conversation
   const handleSendMessage = async () => {
     if (!newMessage.trim() || !selectedConversation) return;
     try {
+      // Get the current user's username
+      const { data: profileData, error: profileError } = await supabase
+        .from("profiles")
+        .select("username")
+        .eq("user_id", user.id)
+        .single();
+      if (profileError) throw new Error("Failed to fetch user profile");
+
+      // Insert the new message into the database
       await supabase.from("messages").upsert({
         sender_id: user.id,
+        sender_username: profileData.username || "Unknown User",
         conversation_id: selectedConversation.id,
         content: newMessage.trim(),
       });
-      setNewMessage("");
+      setNewMessage(""); // Clear the message input
     } catch (err) {
       setError("Failed to send message");
     }
   };
 
+  // Handles creation of a new conversation
   const handleNewConversation = async (conversation) => {
-    await fetchData();
-    setSelectedConversation(conversation);
+    await fetchData(); // Refresh conversation list
+    setSelectedConversation(conversation); // Select the new conversation
   };
 
+  // Show loading spinner while user authentication is in progress
   if (authLoading || !user) {
     return (
       <Container
@@ -278,8 +299,10 @@ function MessageManagement() {
     );
   }
 
+  // Render the main messages UI
   return (
     <Container fluid className="message-management-container">
+      {/* Display error messages with a dismiss button */}
       {error && (
         <Alert variant="danger">
           {error}{" "}
@@ -288,6 +311,7 @@ function MessageManagement() {
           </Button>
         </Alert>
       )}
+      {/* Header with back button and new message button */}
       <div className="d-flex justify-content-between align-items-center mb-4">
         <div>
           <Button
@@ -307,6 +331,7 @@ function MessageManagement() {
         </Button>
       </div>
 
+      {/* Main layout with conversation list and chat area */}
       <div className="d-flex">
         <ConversationList
           conversations={conversations.filter(
@@ -328,12 +353,12 @@ function MessageManagement() {
             newMessage={newMessage}
             setNewMessage={setNewMessage}
             user={user}
-            userNames={userNames}
             handleSendMessage={handleSendMessage}
           />
         </div>
       </div>
 
+      {/* Modal for creating a new conversation */}
       <MessageFormModal
         show={modalConfig.show}
         onClose={() => setModalConfig({ show: false })}
