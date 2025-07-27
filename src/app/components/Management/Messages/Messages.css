@@ -1,4 +1,3 @@
-/* Global styles for better typography and cohesion */
 :root {
   --primary-color: #007bff;
   --secondary-color: #f8f9fa;
@@ -15,6 +14,10 @@ body {
 }
 
 /* Styles for MessageManagement */
+.message-management-container {
+  padding: 1rem;
+}
+
 .chat-area-wrapper {
   flex: 1;
   padding-left: 1.5rem;
@@ -125,6 +128,13 @@ body {
   }
 }
 
+/* Flex container for ConversationList and ChatArea */
+.d-flex {
+  display: flex;
+  flex-wrap: wrap; /* Allow wrapping on smaller screens */
+  gap: 1rem; /* Space between elements when wrapped */
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .conversation-list-container {
@@ -135,7 +145,46 @@ body {
   }
 
   .chat-area-wrapper {
+    width: 100%; /* Full width on small screens */
     padding-left: 0;
     padding-top: 1rem;
+  }
+
+  .message-list {
+    height: 300px; /* Reduce height for smaller screens */
+  }
+
+  .message-bubble {
+    max-width: 85%; /* Slightly wider bubbles to use space better */
+    padding: 0.5rem 0.75rem; /* Slightly smaller padding */
+    font-size: 0.9rem; /* Smaller text for better fit */
+  }
+
+  .conversation-item {
+    padding: 0.5rem 0.75rem; /* Smaller padding for compact screens */
+  }
+
+  .timestamp {
+    font-size: 0.75rem; /* Smaller timestamp */
+  }
+
+  .hide-button {
+    font-size: 0.8rem; /* Smaller hide button */
+  }
+}
+
+/* Extra small screens (e.g., iPhone SE) */
+@media (max-width: 576px) {
+  .message-management-container {
+    padding: 0.5rem; /* Less padding for very small screens */
+  }
+
+  .message-list {
+    height: 250px; /* Further reduce height */
+  }
+
+  .message-bubble {
+    max-width: 90%; /* Maximize bubble width */
+    font-size: 0.85rem; /* Even smaller text */
   }
 }

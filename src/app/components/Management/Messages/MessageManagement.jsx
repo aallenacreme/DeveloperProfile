@@ -1,296 +1,71 @@
-import { useState, useEffect } from "react";
+// MessageManagement.jsx: The main React component for the messaging feature.
+// Renders the UI (conversation list, chat area, new message modal) and orchestrates
+// custom hooks for managing conversations, messages, and actions. Coordinates data flow
+// between Supabase, hooks, and child components, handling navigation and modal state.
+
+import { useState } from "react";
 import { Container, Spinner, Alert, Button } from "react-bootstrap";
-import { supabase } from "../../../services/supabaseClient";
-import { useAuth } from "../../../auth";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../../auth";
+import { useConversations } from "./useConversations";
+import { useMessages } from "./useMessages";
+import { useMessageActions } from "./useMessageActions";
 import MessageFormModal from "./MessageFormModal";
 import ConversationList from "./ConversationList";
 import ChatArea from "./Chat";
 import "./messages.css";
 
-// Main component for managing user messages and conversations
 function MessageManagement() {
-  // Get user data and authentication loading state; set up navigation
+  // Authentication state from useAuth hook
   const { user, loading: authLoading } = useAuth();
+  // Navigation hook for redirecting to homepage
   const navigate = useNavigate();
+  // State for the currently selected conversation
+  const [selectedConversation, setSelectedConversation] = useState(null);
+  // State for controlling the new message modal visibility
+  const [modalConfig, setModalConfig] = useState({ show: false });
+  // State for tracking which conversation is hovered (for UI effects like hide button)
+  const [hoveredConversation, setHoveredConversation] = useState(null);
 
-  // State for storing conversations, selected chat, messages, and UI controls
-  const [conversations, setConversations] = useState([]); // List of user conversations
-  const [selectedConversation, setSelectedConversation] = useState(null); // Currently selected conversation
-  const [messages, setMessages] = useState([]); // Messages in the selected conversation
-  const [newMessage, setNewMessage] = useState(""); // Text for a new message
-  const [error, setError] = useState(null); // Error messages for UI display
-  const [modalConfig, setModalConfig] = useState({ show: false }); // Controls new message modal
-  const [userNames, setUserNames] = useState({}); // Maps conversation IDs to participant usernames
-  const [unreadCounts, setUnreadCounts] = useState({}); // Tracks unread message counts per conversation
-  const [visibilityMap, setVisibilityMap] = useState({}); // Tracks which conversations are visible
-  const [hoveredConversation, setHoveredConversation] = useState(null); // Tracks hovered conversation for UI effects
+  // Fetch conversation-related data (conversations, visibility, usernames, unread counts)
+  const {
+    conversations,
+    visibilityMap,
+    setVisibilityMap,
+    userNames,
+    unreadCounts,
+    setUnreadCounts,
+    error,
+    setError,
+    handleHideConversation,
+    fetchData,
+  } = useConversations(user, authLoading);
 
-  // Fetches visibility status of conversations for the user
-  const fetchVisibility = async () => {
-    const { data, error } = await supabase
-      .from("conversation_visibility")
-      .select("conversation_id, is_visible")
-      .eq("user_id", user.id);
+  // Fetch messages and handle real-time updates for the selected conversation
+  const { messages, setMessages } = useMessages(
+    user,
+    selectedConversation,
+    conversations,
+    visibilityMap,
+    setVisibilityMap,
+    setUnreadCounts,
+    setError
+  );
 
-    if (error) throw error;
+  // Manage message sending and input state
+  const { newMessage, setNewMessage, handleSendMessage } = useMessageActions(
+    user,
+    selectedConversation,
+    setError
+  );
 
-    // Create a map of conversation IDs to their visibility status
-    const newVisibilityMap = {};
-    data.forEach((item) => {
-      newVisibilityMap[item.conversation_id] = item.is_visible;
-    });
-    return newVisibilityMap;
-  };
-
-  // Fetches all conversations, participants, usernames, and unread message counts in parallel
-  const fetchData = async () => {
-    try {
-      // Fetch conversations
-      const conversationsPromise = supabase
-        .from("conversation_participants")
-        .select("conversation_id, conversations!inner(id, created_at, name)")
-        .eq("user_id", user.id)
-        .order("created_at", {
-          foreignTable: "conversations",
-          ascending: false,
-        });
-
-      // Fetch visibility
-      const visibilityPromise = fetchVisibility();
-
-      // Fetch usernames (dependent on conversation IDs)
-      const conversationIdsPromise = conversationsPromise.then(({ data }) =>
-        data ? data.map((c) => c.conversation_id) : []
-      );
-      const usernamePromise = conversationIdsPromise.then((conversationIds) =>
-        supabase
-          .from("conversation_participants")
-          .select(
-            `
-            conversation_id,
-            profiles!inner(username)
-          `
-          )
-          .in("conversation_id", conversationIds)
-          .neq("user_id", user.id)
-      );
-
-      // Fetch unread counts
-      const unreadPromise = supabase
-        .from("unread_messages")
-        .select("conversation_id, count")
-        .eq("user_id", user.id);
-
-      // Execute all fetches in parallel
-      const [
-        { data: convData, error: convError },
-        visibilityData,
-        { data: usernameData, error: usernameError },
-        { data: unreadData, error: unreadError },
-      ] = await Promise.all([
-        conversationsPromise,
-        visibilityPromise,
-        usernamePromise,
-        unreadPromise,
-      ]);
-
-      if (convError) throw new Error("Failed to load conversations");
-      if (usernameError) throw new Error("Failed to load usernames");
-      if (unreadError) throw new Error("Failed to load unread counts");
-
-      // Process conversations
-      setConversations(convData.map((c) => c.conversations));
-
-      // Process visibility
-      setVisibilityMap(visibilityData);
-
-      // Map conversation IDs to lists of participant usernames
-      const convNamesMap = {};
-      usernameData.forEach(({ conversation_id, profiles }) => {
-        if (!convNamesMap[conversation_id]) {
-          convNamesMap[conversation_id] = [];
-        }
-        convNamesMap[conversation_id].push(profiles.username || "Unknown User");
-      });
-      setUserNames(convNamesMap);
-
-      // Create a map of conversation IDs to unread message counts
-      const unreadMap = {};
-      unreadData.forEach((item) => {
-        unreadMap[item.conversation_id] = item.count || 0;
-      });
-      setUnreadCounts(unreadMap);
-    } catch (err) {
-      setError(err.message);
-    }
-  };
-
-  // Hides a conversation by marking it invisible in the database
-  const handleHideConversation = async (conversationId) => {
-    try {
-      // Update local visibility state
-      setVisibilityMap((prev) => ({
-        ...prev,
-        [conversationId]: false,
-      }));
-
-      // Update visibility in the database
-      await supabase.from("conversation_visibility").upsert({
-        user_id: user.id,
-        conversation_id: conversationId,
-        is_visible: false,
-      });
-
-      // Clear selected conversation if it was hidden
-      if (selectedConversation?.id === conversationId) {
-        setSelectedConversation(null);
-      }
-    } catch (err) {
-      console.error("Error hiding conversation:", err.message);
-    }
-  };
-
-  // Fetches conversation data when the user is authenticated
-  useEffect(() => {
-    if (authLoading || !user) return;
-    fetchData();
-  }, [authLoading, user]);
-
-  // Fetches messages for the selected conversation and resets unread count
-  useEffect(() => {
-    if (!selectedConversation) return;
-
-    const fetchMessages = async () => {
-      try {
-        // Get all messages for the selected conversation
-        const { data, error } = await supabase
-          .from("messages")
-          .select("id, sender_id, sender_username, content, created_at")
-          .eq("conversation_id", selectedConversation.id)
-          .order("created_at", { ascending: true });
-
-        if (error) throw new Error("Failed to load messages");
-        setMessages(data || []);
-
-        // Reset unread message count for the conversation
-        await supabase.from("unread_messages").upsert({
-          user_id: user.id,
-          conversation_id: selectedConversation.id,
-          count: 0,
-        });
-        setUnreadCounts((prev) => ({
-          ...prev,
-          [selectedConversation.id]: 0,
-        }));
-      } catch (err) {
-        setError(err.message);
-      }
-    };
-
-    fetchMessages();
-  }, [selectedConversation, user]);
-
-  // Sets up real-time subscription for new messages
-  useEffect(() => {
-    if (!user || conversations.length === 0) return;
-
-    // Subscribe to new messages in all user conversations
-    const channel = supabase
-      .channel("messages_all")
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "messages",
-          filter: `conversation_id=in.(${conversations
-            .map((c) => c.id)
-            .join(",")})`,
-        },
-        async (payload) => {
-          const conversationId = payload.new.conversation_id;
-
-          // Unhide conversation if a new message arrives
-          if (visibilityMap[conversationId] === false) {
-            setVisibilityMap((prev) => ({
-              ...prev,
-              [conversationId]: true,
-            }));
-
-            await supabase.from("conversation_visibility").upsert({
-              user_id: user.id,
-              conversation_id: conversationId,
-              is_visible: true,
-            });
-          }
-
-          // Add new message to the selected conversation
-          setMessages((prev) => {
-            if (conversationId === selectedConversation?.id) {
-              if (prev.some((m) => m.id === payload.new.id)) return prev;
-              return [...prev, payload.new];
-            }
-            return prev;
-          });
-
-          // Update unread count for non-selected conversations
-          if (
-            conversationId !== selectedConversation?.id &&
-            payload.new.sender_id !== user.id
-          ) {
-            setUnreadCounts((prev) => {
-              const newCount = (prev[conversationId] || 0) + 1;
-              supabase.from("unread_messages").upsert({
-                user_id: user.id,
-                conversation_id: conversationId,
-                count: newCount,
-              });
-              return { ...prev, [conversationId]: newCount };
-            });
-          }
-        }
-      )
-      .subscribe();
-
-    // Cleanup subscription on component unmount
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [conversations, selectedConversation, user, visibilityMap]);
-
-  // Sends a new message in the selected conversation
-  const handleSendMessage = async () => {
-    if (!newMessage.trim() || !selectedConversation) return;
-    try {
-      // Get the current user's username
-      const { data: profileData, error: profileError } = await supabase
-        .from("profiles")
-        .select("username")
-        .eq("user_id", user.id)
-        .single();
-      if (profileError) throw new Error("Failed to fetch user profile");
-
-      // Insert the new message into the database
-      await supabase.from("messages").upsert({
-        sender_id: user.id,
-        sender_username: profileData.username || "Unknown User",
-        conversation_id: selectedConversation.id,
-        content: newMessage.trim(),
-      });
-      setNewMessage(""); // Clear the message input
-    } catch (err) {
-      setError("Failed to send message");
-    }
-  };
-
-  // Handles creation of a new conversation
+  // Handle new conversation creation: refresh conversations and select the new one
   const handleNewConversation = async (conversation) => {
     await fetchData(); // Refresh conversation list
-    setSelectedConversation(conversation); // Select the new conversation
+    setSelectedConversation(conversation); // Set new conversation as active
   };
 
-  // Show loading spinner while user authentication is in progress
+  // Show loading spinner while authenticating
   if (authLoading || !user) {
     return (
       <Container
@@ -302,10 +77,9 @@ function MessageManagement() {
     );
   }
 
-  // Render the main messages UI
   return (
     <Container fluid className="message-management-container">
-      {/* Display error messages with a dismiss button */}
+      {/* Display error messages with dismiss button */}
       {error && (
         <Alert variant="danger">
           {error}{" "}
@@ -333,21 +107,20 @@ function MessageManagement() {
           + New Message
         </Button>
       </div>
-
-      {/* Main layout with conversation list and chat area */}
+      {/* Main layout: conversation list and chat area */}
       <div className="d-flex">
         <ConversationList
           conversations={conversations.filter(
-            (conv) => visibilityMap[conv.id] !== false
+            (conv) => visibilityMap[conv.id] !== false // Filter out hidden conversations
           )}
           selectedConversation={selectedConversation}
-          setSelectedConversation={setSelectedConversation}
+          setSelectedConversation={setSelectedConversation} // Update selected conversation
           user={user}
           userNames={userNames}
           unreadCounts={unreadCounts}
           hoveredConversation={hoveredConversation}
           setHoveredConversation={setHoveredConversation}
-          handleHideConversation={handleHideConversation}
+          handleHideConversation={handleHideConversation} // Hide conversation on button click
         />
         <div className="chat-area-wrapper">
           <ChatArea
@@ -356,12 +129,11 @@ function MessageManagement() {
             newMessage={newMessage}
             setNewMessage={setNewMessage}
             user={user}
-            handleSendMessage={handleSendMessage}
+            handleSendMessage={handleSendMessage} // Send new message
           />
         </div>
       </div>
-
-      {/* Modal for creating a new conversation */}
+      {/* Modal for creating new conversations */}
       <MessageFormModal
         show={modalConfig.show}
         onClose={() => setModalConfig({ show: false })}

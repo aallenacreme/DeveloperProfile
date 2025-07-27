@@ -13,15 +13,13 @@ function MessageFormModal({ show, onClose, onSelectConversation, userId }) {
     const fetchContacts = async () => {
       try {
         setLoading(true);
-        const { data: contactData, error } = await supabase
+        const { data, error } = await supabase
           .from("profiles")
           .select("user_id, username, name")
           .neq("user_id", userId);
-
         if (error) throw error;
-
         setContacts(
-          contactData?.map((c) => ({
+          data?.map((c) => ({
             user_id: c.user_id,
             username: c.username,
             name: c.name,
@@ -33,55 +31,88 @@ function MessageFormModal({ show, onClose, onSelectConversation, userId }) {
         setLoading(false);
       }
     };
-
-    if (show) {
-      fetchContacts();
-    }
+    if (show) fetchContacts();
   }, [show, userId]);
 
   const filteredContacts = contacts.filter(
-    (contact) =>
-      contact.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      contact.name?.toLowerCase().includes(searchTerm.toLowerCase())
+    (c) =>
+      c.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      c.name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleSelect = (contact) => {
-    if (selectedContacts.some((c) => c.user_id === contact.user_id)) {
-      setSelectedContacts(
-        selectedContacts.filter((c) => c.user_id !== contact.user_id)
-      );
-    } else {
-      setSelectedContacts([...selectedContacts, contact]);
-    }
+    setSelectedContacts((prev) =>
+      prev.some((c) => c.user_id === contact.user_id)
+        ? prev.filter((c) => c.user_id !== contact.user_id)
+        : [...prev, contact]
+    );
   };
 
   const handleCreateConversation = async () => {
+    if (selectedContacts.length === 0) {
+      alert("Select at least one contact.");
+      return;
+    }
+
     try {
-      if (selectedContacts.length === 0) {
-        alert("Select at least one contact.");
+      // Check for existing conversation
+      const participantIds = [
+        userId,
+        ...selectedContacts.map((c) => c.user_id),
+      ].sort();
+      const { data: existingConvs, error: convError } = await supabase
+        .from("conversation_participants")
+        .select("conversation_id")
+        .in("user_id", participantIds);
+
+      if (convError) throw convError;
+
+      // Group by conversation_id and check for exact match
+      const grouped = existingConvs.reduce((acc, { conversation_id }) => {
+        acc[conversation_id] = acc[conversation_id]
+          ? acc[conversation_id] + 1
+          : 1;
+        return acc;
+      }, {});
+
+      const existingConvId = Object.keys(grouped).find(
+        (id) => grouped[id] === participantIds.length
+      );
+
+      if (existingConvId) {
+        // Fetch existing conversation
+        const { data: conv, error: fetchError } = await supabase
+          .from("conversations")
+          .select("id, name, created_at")
+          .eq("id", existingConvId)
+          .single();
+        if (fetchError) throw fetchError;
+        onSelectConversation(conv);
+        onClose();
         return;
       }
 
+      // Create new conversation
       const { data: created, error: insertError } = await supabase
         .from("conversations")
         .insert({ name: groupName || null })
         .select()
         .single();
-
       if (insertError) throw insertError;
 
+      // Assign admin role to creator, member to others
       const participants = [
-        { conversation_id: created.id, user_id: userId },
+        { conversation_id: created.id, user_id: userId, role: "admin" },
         ...selectedContacts.map((contact) => ({
           conversation_id: created.id,
           user_id: contact.user_id,
+          role: "member",
         })),
       ];
 
       const { error: participantError } = await supabase
         .from("conversation_participants")
         .insert(participants);
-
       if (participantError) throw participantError;
 
       const visibilityEntries = participants.map((p) => ({
@@ -93,13 +124,12 @@ function MessageFormModal({ show, onClose, onSelectConversation, userId }) {
       const { error: visibilityError } = await supabase
         .from("conversation_visibility")
         .insert(visibilityEntries);
-
       if (visibilityError) throw visibilityError;
 
       onSelectConversation(created);
       onClose();
     } catch (err) {
-      console.error("Error creating group conversation:", err);
+      console.error("Error creating conversation:", err);
     }
   };
 
