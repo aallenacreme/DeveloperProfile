@@ -6,10 +6,10 @@ function ConversationList({
   setSelectedConversation,
   user,
   userNames,
-  unreadCounts,
   hoveredConversation,
   setHoveredConversation,
   handleHideConversation,
+  unreadMap,
 }) {
   return (
     <div className="conversation-list-container">
@@ -21,7 +21,6 @@ function ConversationList({
             (userNames[conv.id]?.length
               ? userNames[conv.id].join(", ")
               : "Group Chat");
-          const unreadCount = unreadCounts[conv.id] || 0;
           return (
             <li
               key={conv.id}
@@ -32,14 +31,18 @@ function ConversationList({
               onMouseEnter={() => setHoveredConversation(conv.id)}
               onMouseLeave={() => setHoveredConversation(null)}
             >
-              <div>
-                👥 {displayName}
-                <div className="timestamp">
-                  {new Date(conv.created_at).toLocaleString()}
+              <div className="d-flex align-items-center">
+                {unreadMap[conv.id] && (
+                  <span className="unread-indicator me-2"></span>
+                )}
+                <div>
+                  👥 {displayName}
+                  <div className="timestamp">
+                    {new Date(conv.created_at).toLocaleString()}
+                  </div>
                 </div>
               </div>
               <div className="d-flex align-items-center">
-                {unreadCount > 0 && <span className="unread-indicator" />}
                 {hoveredConversation === conv.id && (
                   <Button
                     variant="link"

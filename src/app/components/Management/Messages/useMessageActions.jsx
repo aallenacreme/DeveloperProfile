@@ -1,7 +1,3 @@
-// useMessageActions.js: Custom hook to manage sending messages and the new message
-// input state. Handles inserting messages into Supabase and clearing the input field.
-// Used by MessageManagement.jsx to enable message sending in ChatArea.
-
 import { useState } from "react";
 import { supabase } from "../../../services/supabaseClient";
 
