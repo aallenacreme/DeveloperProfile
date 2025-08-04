@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Container, Spinner, Alert, Button } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../auth";
 import { useConversations } from "./useConversations";
 import { useMessages } from "./useMessages";
 import { useMessageActions } from "./useMessageActions";
+import { supabase } from "../../../services/supabaseClient";
 import MessageFormModal from "./MessageFormModal";
 import ConversationList from "./ConversationList";
 import ChatArea from "./Chat";
@@ -16,19 +17,20 @@ function MessageManagement() {
   const [selectedConversation, setSelectedConversation] = useState(null);
   const [modalConfig, setModalConfig] = useState({ show: false });
   const [hoveredConversation, setHoveredConversation] = useState(null);
+  const prevConversationRef = useRef(null);
 
   const {
     conversations,
     visibilityMap,
     setVisibilityMap,
     userNames,
+    unreadMap,
+    setUnreadMap,
     error,
     setError,
     handleHideConversation,
     fetchData,
-    unreadMap,
-    markConversationAsRead,
-  } = useConversations(user, authLoading);
+  } = useConversations(user, authLoading, selectedConversation);
 
   const { messages, setMessages } = useMessages(
     user,
@@ -36,8 +38,7 @@ function MessageManagement() {
     conversations,
     visibilityMap,
     setVisibilityMap,
-    setError,
-    markConversationAsRead
+    setError
   );
 
   const { newMessage, setNewMessage, handleSendMessage } = useMessageActions(
@@ -51,12 +52,54 @@ function MessageManagement() {
     setSelectedConversation(conversation);
   };
 
-  // Mark conversation as read when selected
-  useEffect(() => {
-    if (selectedConversation) {
-      markConversationAsRead(selectedConversation.id);
+  const updateLastReadAt = async (conversationId) => {
+    try {
+      await supabase.from("conversation_reads").upsert({
+        user_id: user.id,
+        conversation_id: conversationId,
+        last_read_at: new Date().toISOString(),
+      });
+      setUnreadMap((prev) => ({ ...prev, [conversationId]: false }));
+    } catch (err) {
+      console.error("Error updating last_read_at:", err);
+      setError("Failed to update read status");
     }
-  }, [selectedConversation, markConversationAsRead]);
+  };
+
+  useEffect(() => {
+    if (!selectedConversation) return;
+
+    const handleSwitch = async () => {
+      // Update new conversation
+      await updateLastReadAt(selectedConversation.id);
+
+      // Check previous conversation
+      if (prevConversationRef.current && prevConversationRef.current !== selectedConversation.id) {
+        const { data: latestMessage, error: msgError } = await supabase
+          .from("messages")
+          .select("created_at")
+          .eq("conversation_id", prevConversationRef.current)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .single();
+
+        const { data: readData, error: readError } = await supabase
+          .from("conversation_reads")
+          .select("last_read_at")
+          .eq("user_id", user.id)
+          .eq("conversation_id", prevConversationRef.current)
+          .single();
+
+        if (!msgError && !readError && latestMessage && readData?.last_read_at < latestMessage.created_at) {
+          await updateLastReadAt(prevConversationRef.current);
+        }
+      }
+
+      prevConversationRef.current = selectedConversation.id;
+    };
+
+    handleSwitch();
+  }, [selectedConversation]);
 
   if (authLoading || !user) {
     return (
@@ -106,10 +149,10 @@ function MessageManagement() {
           setSelectedConversation={setSelectedConversation}
           user={user}
           userNames={userNames}
+          unreadMap={unreadMap}
           hoveredConversation={hoveredConversation}
           setHoveredConversation={setHoveredConversation}
           handleHideConversation={handleHideConversation}
-          unreadMap={unreadMap}
         />
         <div className="chat-area-wrapper">
           <ChatArea

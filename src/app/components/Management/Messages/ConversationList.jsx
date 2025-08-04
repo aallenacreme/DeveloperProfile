@@ -33,7 +33,9 @@ function ConversationList({
             >
               <div className="d-flex align-items-center">
                 {unreadMap[conv.id] && (
-                  <span className="unread-indicator me-2"></span>
+                  <span className="unread-dot me-2" style={{ color: "red" }}>
+                    ●
+                  </span>
                 )}
                 <div>
                   👥 {displayName}

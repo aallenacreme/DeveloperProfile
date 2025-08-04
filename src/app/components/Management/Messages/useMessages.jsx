@@ -7,8 +7,7 @@ export const useMessages = (
   conversations,
   visibilityMap,
   setVisibilityMap,
-  setError,
-  markConversationAsRead
+  setError
 ) => {
   const [messages, setMessages] = useState([]);
   const channelRef = useRef(null);
@@ -26,18 +25,13 @@ export const useMessages = (
 
         if (error) throw new Error("Failed to load messages");
         setMessages(data || []);
-
-        // Mark as read after loading messages
-        if (data && data.length > 0) {
-          markConversationAsRead(selectedConversation.id);
-        }
       } catch (err) {
         setError(err.message);
       }
     };
 
     fetchMessages();
-  }, [selectedConversation, user, setError, markConversationAsRead]);
+  }, [selectedConversation, user, setError]);
 
   useEffect(() => {
     if (!user || conversations.length === 0) return;
