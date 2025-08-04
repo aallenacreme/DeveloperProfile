@@ -7,9 +7,8 @@ export const useMessageActions = (user, selectedConversation, setError) => {
 
   // Send a new message to the selected conversation
   const handleSendMessage = async () => {
-    if (!newMessage.trim() || !selectedConversation) return; // Skip if input is empty or no conversation selected
+    if (!newMessage.trim() || !selectedConversation) return;
     try {
-      // Fetch current user’s username
       const { data: profileData, error: profileError } = await supabase
         .from("profiles")
         .select("username")
@@ -17,14 +16,21 @@ export const useMessageActions = (user, selectedConversation, setError) => {
         .single();
       if (profileError) throw new Error("Failed to fetch user profile");
 
-      // Insert new message into Supabase
       await supabase.from("messages").upsert({
         sender_id: user.id,
         sender_username: profileData.username || "Unknown User",
         conversation_id: selectedConversation.id,
         content: newMessage.trim(),
       });
-      setNewMessage(""); // Clear input field
+
+      // **Add this**: update last_read_at to now for this conversation
+      await supabase.from("conversation_reads").upsert({
+        user_id: user.id,
+        conversation_id: selectedConversation.id,
+        last_read_at: new Date().toISOString(),
+      });
+
+      setNewMessage("");
     } catch (err) {
       setError("Failed to send message");
     }

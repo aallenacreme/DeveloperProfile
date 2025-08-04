@@ -35,7 +35,10 @@ export const useConversations = (user, authLoading, selectedConversation) => {
         .from("conversation_participants")
         .select("conversation_id, conversations!inner(id, created_at, name)")
         .eq("user_id", user.id)
-        .order("created_at", { foreignTable: "conversations", ascending: false });
+        .order("created_at", {
+          foreignTable: "conversations",
+          ascending: false,
+        });
 
       if (convError) throw new Error("Failed to load conversations");
 
@@ -85,7 +88,8 @@ export const useConversations = (user, authLoading, selectedConversation) => {
         const latestMessageAt = latestMessages[id];
         const readData = readsData.find((r) => r.conversation_id === id);
         const lastReadAt = readData?.last_read_at;
-        newUnreadMap[id] = latestMessageAt && (!lastReadAt || latestMessageAt > lastReadAt);
+        newUnreadMap[id] =
+          latestMessageAt && (!lastReadAt || latestMessageAt > lastReadAt);
       });
       setUnreadMap(newUnreadMap);
     } catch (err) {
@@ -219,7 +223,9 @@ export const useConversations = (user, authLoading, selectedConversation) => {
           event: "INSERT",
           schema: "public",
           table: "messages",
-          filter: `conversation_id=in.(${conversations.map((c) => c.id).join(",")})`,
+          filter: `conversation_id=in.(${conversations
+            .map((c) => c.id)
+            .join(",")})`,
         },
         async (payload) => {
           const newMessage = payload.new;
@@ -240,7 +246,10 @@ export const useConversations = (user, authLoading, selectedConversation) => {
 
           const lastReadAt = readData?.last_read_at;
           if (!lastReadAt || newMessage.created_at > lastReadAt) {
-            setUnreadMap((prev) => ({ ...prev, [newMessage.conversation_id]: true }));
+            setUnreadMap((prev) => ({
+              ...prev,
+              [newMessage.conversation_id]: true,
+            }));
           }
         }
       )
@@ -273,8 +282,7 @@ export const useConversations = (user, authLoading, selectedConversation) => {
             .select("created_at")
             .eq("conversation_id", conversationId)
             .order("created_at", { ascending: false })
-            .limit(1)
-            .single();
+            .limit(1);
 
           if (error) {
             console.error("Error fetching latest message:", error);
