@@ -74,7 +74,10 @@ function MessageManagement() {
       await updateLastReadAt(selectedConversation.id);
 
       // Check previous conversation
-      if (prevConversationRef.current && prevConversationRef.current !== selectedConversation.id) {
+      if (
+        prevConversationRef.current &&
+        prevConversationRef.current !== selectedConversation.id
+      ) {
         const { data: latestMessage, error: msgError } = await supabase
           .from("messages")
           .select("created_at")
@@ -90,7 +93,12 @@ function MessageManagement() {
           .eq("conversation_id", prevConversationRef.current)
           .single();
 
-        if (!msgError && !readError && latestMessage && readData?.last_read_at < latestMessage.created_at) {
+        if (
+          !msgError &&
+          !readError &&
+          latestMessage &&
+          readData?.last_read_at < latestMessage.created_at
+        ) {
           await updateLastReadAt(prevConversationRef.current);
         }
       }

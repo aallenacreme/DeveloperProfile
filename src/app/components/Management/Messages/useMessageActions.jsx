@@ -5,9 +5,9 @@ export const useMessageActions = (user, selectedConversation, setError) => {
   // State for the new message input field
   const [newMessage, setNewMessage] = useState("");
 
-  // Send a new message to the selected conversation
   const handleSendMessage = async () => {
     if (!newMessage.trim() || !selectedConversation) return;
+
     try {
       const { data: profileData, error: profileError } = await supabase
         .from("profiles")
@@ -16,22 +16,30 @@ export const useMessageActions = (user, selectedConversation, setError) => {
         .single();
       if (profileError) throw new Error("Failed to fetch user profile");
 
-      await supabase.from("messages").upsert({
-        sender_id: user.id,
-        sender_username: profileData.username || "Unknown User",
-        conversation_id: selectedConversation.id,
-        content: newMessage.trim(),
-      });
+      // Insert message and get the created_at
+      const { data: insertedMessage, error: insertError } = await supabase
+        .from("messages")
+        .insert({
+          sender_id: user.id,
+          sender_username: profileData.username || "Unknown User",
+          conversation_id: selectedConversation.id,
+          content: newMessage.trim(),
+        })
+        .select("created_at") // fetch the timestamp
+        .single();
 
-      // **Add this**: update last_read_at to now for this conversation
+      if (insertError) throw new Error("Failed to send message");
+
+      // Use the exact created_at for the read time (or slightly after)
       await supabase.from("conversation_reads").upsert({
         user_id: user.id,
         conversation_id: selectedConversation.id,
-        last_read_at: new Date().toISOString(),
+        last_read_at: insertedMessage.created_at,
       });
 
       setNewMessage("");
     } catch (err) {
+      console.error(err);
       setError("Failed to send message");
     }
   };
